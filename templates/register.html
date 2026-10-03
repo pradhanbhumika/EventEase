@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account – EventEase{% endblock %}
+
+{% block content %}
+<section class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Create your account 🎉</h1>
+        <p class="sub">Join EventEase and start booking amazing events.</p>
+
+        <form method="post" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="name">Full name</label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="{{ form.name }}" placeholder="Your full name"
+                       minlength="2" maxlength="60" data-no-digits required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" class="form-control"
+                       value="{{ form.email }}" placeholder="you@example.com" maxlength="120" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" name="password" class="form-control"
+                           placeholder="At least 8 characters" minlength="8"
+                           data-strong-password required>
+                    <button type="button" class="toggle-password" data-target="password" aria-label="Show or hide password">👁️</button>
+                </div>
+                <div class="strength" id="strength" data-level="0">
+                    <div class="strength-bar"><span class="strength-fill"></span></div>
+                    <small id="strength-text">Use 8+ characters with a letter and a number.</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm password</label>
+                <div class="input-wrap">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                           placeholder="Re-enter your password" data-match="password" required>
+                    <button type="button" class="toggle-password" data-target="confirm_password" aria-label="Show or hide password">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Sign Up</button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Login</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

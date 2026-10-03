@@ -1,0 +1,231 @@
+/* =========================================================
+   EventEase – Enhancements
+   Loaded AFTER style.css. It adds: toast notifications,
+   form validation styles, better seat selection, the new
+   digital ticket, tabs, status pages and mobile tweaks.
+   ========================================================= */
+
+/* ---------- Tier colours (VIP / Premium / Standard) ---------- */
+.tier-vip      { background: #fff6d6; color: #8a6100; }
+.tier-premium  { background: #f0ebff; color: #5433e0; }
+.tier-standard { background: #eef0f6; color: #4b4a63; }
+
+.tier-list { display: grid; gap: .5rem; margin-top: 1rem; }
+.tier-item { display: flex; justify-content: space-between; align-items: center; padding: .55rem .9rem; border-radius: 10px; font-size: .9rem; }
+
+/* ---------- Toast notifications ---------- */
+.toast-container {
+    position: fixed; top: 84px; right: 18px; z-index: 2000;
+    display: flex; flex-direction: column; gap: .7rem;
+    width: min(380px, calc(100vw - 36px)); pointer-events: none;
+}
+.toast {
+    pointer-events: auto; position: relative; overflow: hidden;
+    display: flex; align-items: flex-start; gap: .75rem;
+    padding: .9rem 1rem; border-radius: 14px; background: #fff;
+    border-left: 5px solid var(--info); color: var(--info);
+    box-shadow: 0 14px 40px rgba(20, 18, 43, .18);
+    animation: toastIn .35s ease;
+    transition: opacity .3s, transform .3s;
+}
+.toast.hide { opacity: 0; transform: translateX(40px); }
+.toast-success { border-color: var(--success); color: var(--success); }
+.toast-error   { border-color: var(--danger);  color: var(--danger); }
+.toast-warning { border-color: var(--warning); color: var(--warning); }
+.toast-icon { font-size: 1.15rem; line-height: 1.5; }
+.toast-body { flex: 1; font-size: .92rem; font-weight: 500; color: var(--dark); line-height: 1.5; }
+.toast-close { background: none; border: 0; font-size: 1.4rem; line-height: 1; cursor: pointer; color: var(--muted); }
+.toast-close:hover { color: var(--dark); }
+.toast-progress {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+    background: currentColor; opacity: .4; transform-origin: left;
+    animation: toastProgress 5s linear forwards;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes toastProgress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ---------- Form validation ---------- */
+.form-control.is-invalid { border-color: var(--danger); background: #fff8f9; }
+.form-control.is-invalid:focus { box-shadow: 0 0 0 4px rgba(225, 29, 72, .12); }
+.form-control.is-valid { border-color: var(--success); }
+.field-error { color: var(--danger); font-size: .8rem; font-weight: 500; margin-top: .35rem; }
+
+.strength { margin-top: .55rem; }
+.strength-bar { height: 6px; background: #ececf5; border-radius: 99px; overflow: hidden; }
+.strength-fill { display: block; height: 100%; width: 0; border-radius: 99px; transition: width .3s, background .3s; }
+.strength small { display: block; margin-top: .3rem; color: var(--muted); font-size: .78rem; }
+.strength[data-level="1"] .strength-fill { width: 25%;  background: var(--danger); }
+.strength[data-level="2"] .strength-fill { width: 50%;  background: var(--warning); }
+.strength[data-level="3"] .strength-fill { width: 75%;  background: #84cc16; }
+.strength[data-level="4"] .strength-fill { width: 100%; background: var(--success); }
+
+/* ---------- Seat selection ---------- */
+.seat-toolbar {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px dashed var(--border);
+}
+.quick-pick-group { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; font-size: .88rem; }
+.quick-pick {
+    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff;
+    font-family: inherit; font-weight: 600; color: var(--text); cursor: pointer; transition: all .2s;
+}
+.quick-pick:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+.swipe-hint { display: none; text-align: center; font-size: .78rem; color: var(--muted); margin-bottom: .8rem; }
+
+.tier-heading {
+    display: flex; justify-content: space-between; gap: 1rem; margin: 16px 0 8px; padding: .3rem .8rem;
+    border-radius: 8px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+}
+.tier-heading:first-child { margin-top: 0; }
+
+.seat-vip     { border-color: #f0b429; background: #fffbea; }
+.seat-premium { border-color: #a78bfa; background: #f7f4ff; }
+.seat:focus-visible { outline: 3px solid rgba(108, 71, 255, .45); outline-offset: 2px; }
+
+button.seat-chip { border: 0; font-family: inherit; cursor: pointer; transition: all .2s; }
+button.seat-chip:hover { background: rgba(225, 29, 72, .12); color: var(--danger); }
+#seat-breakdown .summary-line span { font-size: .88rem; }
+
+.mobile-bar {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .7rem 1.1rem calc(.7rem + env(safe-area-inset-bottom, 0px));
+    background: #fff; border-top: 1px solid var(--border); box-shadow: 0 -8px 24px rgba(20, 18, 43, .12);
+}
+.mobile-bar strong { display: block; font-size: .85rem; color: var(--muted); font-weight: 500; }
+.mobile-bar span { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+
+/* ---------- Tabs (My Bookings) ---------- */
+.tabs {
+    display: flex; gap: .4rem; width: max-content; max-width: 100%; margin-bottom: 1.5rem;
+    padding: .4rem; background: #fff; border: 1px solid var(--border); border-radius: 999px;
+}
+.tab-btn {
+    display: flex; align-items: center; gap: .5rem; border: 0; background: transparent; cursor: pointer;
+    padding: .55rem 1.3rem; border-radius: 999px; font-family: inherit; font-weight: 600; color: var(--muted); transition: all .2s;
+}
+.tab-btn.active { background: var(--gradient); color: #fff; }
+.tab-count { background: rgba(108, 71, 255, .12); color: var(--primary); font-size: .75rem; padding: .05rem .5rem; border-radius: 999px; }
+.tab-btn.active .tab-count { background: rgba(255, 255, 255, .25); color: #fff; }
+.js .tab-panel { display: none; }
+.js .tab-panel.active { display: block; animation: slideDown .3s ease; }
+
+/* ---------- Confirmation QR ---------- */
+.confirm-qr { margin: 1.4rem auto 0; text-align: center; }
+.confirm-qr img { width: 150px; height: 150px; margin: 0 auto .4rem; padding: 8px; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+.confirm-qr small { color: var(--muted); }
+
+/* ---------- Status pages (verify ticket + errors) ---------- */
+.status-box { max-width: 560px; margin: 3.5rem auto; padding: 2.5rem 2rem; text-align: center; background: #fff; border-radius: 24px; box-shadow: var(--shadow-lg); }
+.status-icon { width: 84px; height: 84px; margin: 0 auto 1.2rem; border-radius: 50%; display: grid; place-items: center; font-size: 2.4rem; font-weight: 700; color: #fff; animation: pop .5s ease; }
+.status-icon.ok   { background: var(--success); }
+.status-icon.warn { background: var(--warning); }
+.status-icon.bad  { background: var(--danger); }
+.error-code { font-size: 5.5rem; font-weight: 800; line-height: 1; }
+
+/* ---------- Digital ticket ---------- */
+.eticket-page { padding: 2.5rem 0 4rem; }
+.eticket {
+    position: relative; display: flex; max-width: 860px; margin: 0 auto; overflow: hidden;
+    background: #fff; border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow-lg);
+}
+.eticket-main { flex: 1; min-width: 0; }
+.eticket-banner {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    padding: 1rem 2rem; background: var(--gradient); color: #fff;
+}
+.eticket-brand { font-size: 1.05rem; font-weight: 800; letter-spacing: .02em; }
+.eticket-brand b { font-weight: 600; opacity: .85; }
+.eticket-cat {
+    padding: .2rem .85rem; border-radius: 999px; background: rgba(255, 255, 255, .22);
+    font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap;
+}
+.eticket-body { padding: 1.8rem 2rem 2rem; }
+.eticket-title { font-size: 1.85rem; margin-bottom: .3rem; }
+.eticket-venue { color: var(--muted); margin-bottom: 1.4rem; }
+.eticket-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem 1.4rem;
+    padding: 1.2rem 0; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border);
+}
+.eticket-grid small, .eticket-seats small {
+    display: block; margin-bottom: .1rem; color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .09em;
+}
+.eticket-grid strong { color: var(--dark); font-size: .95rem; word-break: break-word; }
+.eticket-seats { margin-top: 1.2rem; }
+.eticket-seat-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.eticket-seat-list span { padding: .3rem .85rem; border-radius: 8px; background: var(--dark); color: #fff; font-weight: 700; font-size: .9rem; }
+.eticket-note { margin-top: 1.3rem; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+
+.eticket-stub {
+    position: relative; width: 260px; flex-shrink: 0; padding: 1.8rem 1.4rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9rem; text-align: center;
+    background: var(--dark); color: #fff; border-left: 2px dashed rgba(255, 255, 255, .35);
+}
+.eticket-stub::before, .eticket-stub::after {
+    content: ''; position: absolute; left: -14px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg);
+}
+.eticket-stub::before { top: -14px; }
+.eticket-stub::after  { bottom: -14px; }
+.eticket-stub small { display: block; opacity: .7; font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; }
+.eticket-qr { width: 172px; height: 172px; padding: 10px; border-radius: 14px; background: #fff; }
+.eticket-qr-missing { display: grid; place-items: center; color: var(--dark); font-size: .75rem; line-height: 1.4; }
+.eticket-code { margin-top: .15rem; font-size: .95rem; font-weight: 800; letter-spacing: .06em; word-break: break-all; }
+.ticket-actions .btn { min-width: 150px; }
+
+/* ---------- Extra responsive tweaks ---------- */
+@media (max-width: 992px) {
+    .mobile-bar { display: flex; }
+    .seat-layout { padding-bottom: 6.5rem; }
+    .swipe-hint { display: block; }
+}
+
+@media (max-width: 768px) {
+    .toast-container { top: 76px; right: 12px; left: 12px; width: auto; }
+
+    .seat { width: 30px; height: 32px; }
+    .seat-toolbar { flex-direction: column; align-items: flex-start; }
+    .tabs { width: 100%; }
+    .tab-btn { flex: 1; justify-content: center; padding: .55rem .8rem; }
+
+    .eticket { flex-direction: column; }
+    .eticket-banner { padding: 1rem 1.2rem; }
+    .eticket-body { padding: 1.4rem 1.2rem 1.6rem; }
+    .eticket-title { font-size: 1.5rem; }
+    .eticket-grid { grid-template-columns: 1fr 1fr; }
+    .eticket-stub { width: auto; border-left: 0; border-top: 2px dashed rgba(255, 255, 255, .35); }
+    .eticket-stub::before, .eticket-stub::after { top: -14px; bottom: auto; }
+    .eticket-stub::before { left: -14px; }
+    .eticket-stub::after  { left: auto; right: -14px; }
+
+    .ticket-actions .btn { flex: 1 1 45%; min-width: 0; }
+    .status-box { margin: 2rem auto; padding: 2rem 1.2rem; }
+    .table th, .table td { padding: .75rem .7rem; }
+}
+
+@media (max-width: 480px) {
+    .hero-stats strong { font-size: 1.6rem; }
+    .btn-row .btn { flex: 1 1 100%; }
+    .filter-bar { margin-top: -1.5rem; }
+    .eticket-grid { grid-template-columns: 1fr; }
+    .booking-actions .btn { flex: 1; }
+    .confirm-box { margin: 2rem auto; padding: 2rem 1.2rem; }
+}
+
+/* ---------- Printing the ticket ---------- */
+@media print {
+    @page { margin: 12mm; }
+    .toast-container, .mobile-bar { display: none !important; }
+    .eticket-page { padding: 0; }
+    .eticket {
+        flex-direction: row; max-width: 100%; box-shadow: none; border: 1px solid #bbb;
+        break-inside: avoid; page-break-inside: avoid;
+    }
+    .eticket-banner, .eticket-stub, .eticket-seat-list span, .status-badge {
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .eticket-grid { grid-template-columns: repeat(3, 1fr); }
+    .eticket-stub { width: 230px; border-top: 0; border-left: 2px dashed rgba(255, 255, 255, .5); }
+    .eticket-stub::before, .eticket-stub::after { left: -14px; right: auto; background: #fff; }
+    .eticket-stub::before { top: -14px; bottom: auto; }
+    .eticket-stub::after  { bottom: -14px; top: auto; }
+}

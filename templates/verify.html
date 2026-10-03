@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Ticket – EventEase{% endblock %}
+
+{% block content %}
+<section class="container">
+    <div class="status-box">
+
+        {% if not booking %}
+            <div class="status-icon bad">✕</div>
+            <h1>Ticket not found</h1>
+            <p class="muted mt-1">We could not find a booking with the ID <strong>{{ code }}</strong>. This ticket may be invalid.</p>
+        {% else %}
+            {% if is_past %}
+                <div class="status-icon warn">!</div>
+                <h1>Genuine ticket – event is over</h1>
+                <p class="muted mt-1">This booking is real, but the event has already taken place.</p>
+            {% else %}
+                <div class="status-icon ok">✓</div>
+                <h1>Valid ticket</h1>
+                <p class="muted mt-1">This booking is confirmed and genuine.</p>
+            {% endif %}
+
+            <div class="confirm-details" style="margin-top: 1.5rem;">
+                <ul class="info-list">
+                    <li><span>Booking ID</span><span>{{ booking.booking_code }}</span></li>
+                    <li><span>Event</span><span>{{ booking.title }}</span></li>
+                    <li><span>Date &amp; time</span><span>{{ booking.event_date|nice_date }}, {{ booking.event_time|nice_time }}</span></li>
+                    <li><span>Venue</span><span>{{ booking.venue }}, {{ booking.city }}</span></li>
+                    <li><span>Attendee</span><span>{{ booking.user_name }}</span></li>
+                    <li><span>Seats</span><span>{{ seat_list|join(', ') }}</span></li>
+                    <li><span>Admit</span><span>{{ booking.num_tickets }}</span></li>
+                    <li><span>Status</span><span>{{ booking.status }}</span></li>
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="btn-row">
+            <a href="{{ url_for('index') }}" class="btn btn-outline">Go to EventEase</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

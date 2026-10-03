@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Events – EventEase{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>Explore Events</h1>
+        <p>Find concerts, conferences, comedy nights, festivals and more.</p>
+    </div>
+</section>
+
+<section class="container" style="padding-bottom: 4rem;">
+
+    <!-- ============ FILTER BAR ============ -->
+    <form method="get" action="{{ url_for('events') }}" class="filter-bar">
+        <input type="text" name="q" class="form-control" value="{{ q }}"
+               placeholder="Search by event, venue or city…" aria-label="Search events">
+
+        <select name="category" class="form-control" data-autosubmit aria-label="Category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="sort" class="form-control" data-autosubmit aria-label="Sort by">
+            <option value="date" {% if sort == 'date' %}selected{% endif %}>Sort: Date (soonest)</option>
+            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Sort: Price (low to high)</option>
+            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Sort: Price (high to low)</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+        {% if q or selected_category %}
+            <a href="{{ url_for('events') }}" class="btn btn-outline">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- ============ CATEGORY CHIPS ============ -->
+    {% set icons = {'Concert': '🎵', 'Conference': '💼', 'Sports': '🏏', 'Comedy': '🎤', 'Festival': '🎪', 'Workshop': '🛠️', 'Theatre': '🎭'} %}
+    <div class="category-list mb-2" style="margin-bottom: 2rem;">
+        <a href="{{ url_for('events') }}" class="category-chip {% if not selected_category %}active{% endif %}">
+            <span class="chip-icon">🎟️</span>All
+        </a>
+        {% for cat in categories %}
+            <a href="{{ url_for('events', category=cat) }}" class="category-chip {% if cat == selected_category %}active{% endif %}">
+                <span class="chip-icon">{{ icons.get(cat, '🎟️') }}</span>{{ cat }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <p class="muted mb-2">
+        {{ events|length }} event{{ '' if events|length == 1 else 's' }} found
+        {% if q %} for “{{ q }}”{% endif %}
+        {% if selected_category %} in {{ selected_category }}{% endif %}
+    </p>
+
+    <!-- ============ EVENT GRID ============ -->
+    {% if events %}
+        <div class="grid grid-3">
+            {% for event in events %}
+                {% set left = event.total_seats - event.booked_count %}
+                <article class="event-card reveal">
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="card-img"
+                       style="background-image: url('{{ event.image_url }}');">
+                        <span class="card-badge">{{ event.category }}</span>
+                        <span class="date-badge"><strong>{{ event.event_date|day_num }}</strong>{{ event.event_date|month_short }}</span>
+                    </a>
+                    <div class="card-body">
+                        <h3><a href="{{ url_for('event_detail', event_id=event.id) }}">{{ event.title }}</a></h3>
+                        <p class="card-meta">📍 {{ event.venue }}, {{ event.city }}</p>
+                        <p class="card-meta">🕒 {{ event.event_date|nice_date }} · {{ event.event_time|nice_time }}</p>
+
+                        <div class="seats-bar">
+                            <div class="seats-bar-fill" style="width: {{ (event.booked_count / event.total_seats * 100)|round|int }}%;"></div>
+                        </div>
+                        <p class="seats-text {% if left <= 10 %}seats-low{% endif %}">
+                            {% if left <= 0 %}Sold out
+                            {% elif left <= 10 %}🔥 Only {{ left }} seats left
+                            {% else %}{{ left }} seats available{% endif %}
+                        </p>
+
+                        <div class="card-footer">
+                            <span class="price">{{ event.price|inr }} <small>onwards</small></span>
+                            {% if left <= 0 %}
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-light btn-sm">Details</a>
+                            {% else %}
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">Book Now</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>No events found</h3>
+            <p>Try a different search word or choose another category.</p>
+            <a href="{{ url_for('events') }}" class="btn btn-primary">Show All Events</a>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

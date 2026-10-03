@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings – EventEase{% endblock %}
+
+{% block content %}
+
+{# One small reusable piece for a booking row (used for both tabs) #}
+{% macro booking_card(booking, past) %}
+    <div class="booking-item">
+        <div class="thumb" style="background-image: url('{{ booking.image_url }}');"></div>
+
+        <div class="booking-info">
+            <h3>{{ booking.title }}</h3>
+            <p>📅 {{ booking.event_date|nice_date }} · {{ booking.event_time|nice_time }}</p>
+            <p>📍 {{ booking.venue }}, {{ booking.city }}</p>
+            <p>💺 Seats: <strong>{{ booking.seats.replace(',', ', ') }}</strong> ({{ booking.num_tickets }} ticket{{ '' if booking.num_tickets == 1 else 's' }})</p>
+            <p>🧾 {{ booking.booking_code }} · Paid {{ booking.total_amount|inr }}</p>
+        </div>
+
+        <div class="booking-actions">
+            {% if past %}
+                <span class="status-badge past">Completed</span>
+            {% else %}
+                <span class="status-badge">{{ booking.status }}</span>
+            {% endif %}
+            <a href="{{ url_for('ticket', booking_id=booking.id) }}" class="btn btn-primary btn-sm">🎫 View Ticket</a>
+            <a href="{{ url_for('confirmation', booking_id=booking.id) }}" class="btn btn-outline btn-sm">Receipt</a>
+        </div>
+    </div>
+{% endmacro %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>My Bookings</h1>
+        <p>All the tickets you have booked with EventEase.</p>
+    </div>
+</section>
+
+<section class="container" style="padding: 2.5rem 1.25rem 4rem;">
+
+    {% if total == 0 %}
+        <div class="empty-state">
+            <div class="empty-icon">🎫</div>
+            <h3>No bookings yet</h3>
+            <p>You have not booked any tickets. Find an event and grab your seats!</p>
+            <a href="{{ url_for('events') }}" class="btn btn-primary">Browse Events</a>
+        </div>
+    {% else %}
+        <div data-tabs>
+            <div class="tabs">
+                <button type="button" class="tab-btn active" data-tab="upcoming">
+                    Upcoming <span class="tab-count">{{ upcoming|length }}</span>
+                </button>
+                <button type="button" class="tab-btn" data-tab="past">
+                    Past <span class="tab-count">{{ past|length }}</span>
+                </button>
+            </div>
+
+            <!-- Upcoming -->
+            <div class="tab-panel active" data-panel="upcoming">
+                {% if upcoming %}
+                    <div class="booking-list">
+                        {% for booking in upcoming %}
+                            {{ booking_card(booking, false) }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <h3>No upcoming bookings</h3>
+                        <p>You do not have any tickets for upcoming events. Discover something new!</p>
+                        <a href="{{ url_for('events') }}" class="btn btn-primary">Find Events</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Past -->
+            <div class="tab-panel" data-panel="past">
+                {% if past %}
+                    <div class="booking-list">
+                        {% for booking in past %}
+                            {{ booking_card(booking, true) }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">🕰️</div>
+                        <h3>No past bookings</h3>
+                        <p>Events you have attended will show up here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

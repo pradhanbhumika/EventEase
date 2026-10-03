@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit Event' if mode == 'edit' else 'Add Event' }} – EventEase Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-layout">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="admin-sidebar">
+            <h4>Admin Panel</h4>
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" class="{% if mode == 'edit' %}active{% endif %}">🎭 Manage Events</a>
+            <a href="{{ url_for('admin_add_event') }}" class="{% if mode == 'add' %}active{% endif %}">➕ Add Event</a>
+            <a href="{{ url_for('admin_bookings') }}">🎫 All Bookings</a>
+            <a href="{{ url_for('index') }}">🌐 View Website</a>
+        </aside>
+
+        <!-- ============ CONTENT ============ -->
+        <div>
+            <div class="admin-head">
+                <h1>{{ 'Edit Event' if mode == 'edit' else 'Add New Event' }}</h1>
+                <a href="{{ url_for('admin_events') }}" class="btn btn-outline btn-sm">← Back to Events</a>
+            </div>
+
+            <div class="card-panel">
+                <form method="post"
+                      action="{% if mode == 'edit' %}{{ url_for('admin_edit_event', event_id=event_id) }}{% else %}{{ url_for('admin_add_event') }}{% endif %}">
+
+                    <div class="form-group">
+                        <label for="title">Event title</label>
+                        <input type="text" id="title" name="title" class="form-control"
+                               value="{{ event.title }}" placeholder="e.g. Neon Nights Live" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" class="form-control" required>
+                                <option value="">-- Select category --</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if event.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Ticket price (₹)</label>
+                            <input type="number" id="price" name="price" class="form-control"
+                                   value="{{ event.price }}" min="0" step="1" placeholder="e.g. 499" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_seats">Total seats</label>
+                            <input type="number" id="total_seats" name="total_seats" class="form-control"
+                                   value="{{ event.total_seats }}" min="10" max="200" placeholder="10 to 200" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control"
+                                  placeholder="Tell people what this event is about…" required>{{ event.description }}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="venue">Venue</label>
+                            <input type="text" id="venue" name="venue" class="form-control"
+                                   value="{{ event.venue }}" placeholder="e.g. Skyline Arena" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" class="form-control"
+                                   value="{{ event.city }}" placeholder="e.g. Mumbai" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event_date">Date</label>
+                            <input type="date" id="event_date" name="event_date" class="form-control"
+                                   value="{{ event.event_date }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event_time">Time</label>
+                            <input type="time" id="event_time" name="event_time" class="form-control"
+                                   value="{{ event.event_time }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image_url">Image URL (optional)</label>
+                        <input type="url" id="image_url" name="image_url" class="form-control"
+                               value="{{ event.image_url }}" placeholder="https://…">
+                        <p class="form-hint">Leave empty to use a default event image.</p>
+                    </div>
+
+                    <div class="btn-row" style="justify-content: flex-start;">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {{ '💾 Save Changes' if mode == 'edit' else '➕ Add Event' }}
+                        </button>
+                        <a href="{{ url_for('admin_events') }}" class="btn btn-outline btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

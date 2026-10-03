@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Select Seats – {{ event.title }}{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>Select Your Seats</h1>
+        <p>{{ event.title }} · {{ event.event_date|nice_date }} · {{ event.event_time|nice_time }} · {{ event.venue }}, {{ event.city }}</p>
+    </div>
+</section>
+
+<section class="container">
+    <div class="seat-layout">
+
+        <!-- ============ SEAT MAP ============ -->
+        <div class="seat-panel">
+
+            <div class="seat-toolbar">
+                <div class="quick-pick-group">
+                    <span class="muted">Quick pick seats together:</span>
+                    {% for n in range(1, MAX_SEATS + 1) %}
+                        <button type="button" class="quick-pick" data-qty="{{ n }}" title="Pick {{ n }} seat{{ '' if n == 1 else 's' }} together">{{ n }}</button>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="clear-seats" disabled>Clear selection</button>
+            </div>
+
+            <div class="screen">Stage / Screen</div>
+
+            <p class="swipe-hint">↔ Swipe sideways if you cannot see all the seats</p>
+
+            <div class="seat-scroll">
+                <div class="seat-map" id="seat-map"
+                     data-max="{{ MAX_SEATS }}" data-fee-rate="{{ FEE_RATE }}">
+
+                    {% set ns = namespace(tier='') %}
+                    {% for row in rows %}
+
+                        {% if row.tier != ns.tier %}
+                            <div class="tier-heading tier-{{ row.tier }}">
+                                <span>{{ row.tier_label }}</span>
+                                <span>{{ row.price|inr }} per seat</span>
+                            </div>
+                            {% set ns.tier = row.tier %}
+                        {% endif %}
+
+                        <div class="seat-row" data-tier="{{ row.tier }}">
+                            <span class="row-label">{{ row.letter }}</span>
+                            {% for seat in row.seats %}
+                                <button type="button"
+                                        class="seat seat-{{ seat.tier }}{% if seat.taken %} taken{% endif %}"
+                                        data-seat="{{ seat.label }}"
+                                        data-price="{{ seat.price }}"
+                                        data-tier-label="{{ row.tier_label }}"
+                                        aria-pressed="false"
+                                        aria-label="Seat {{ seat.label }}, {{ row.tier_label }}, {{ seat.price|inr }}{% if seat.taken %}, already booked{% endif %}"
+                                        title="Seat {{ seat.label }} · {{ row.tier_label }} · {{ seat.price|inr }}{% if seat.taken %} (booked){% endif %}"
+                                        {% if seat.taken %}disabled{% endif %}>{{ seat.label[1:] }}</button>
+                            {% endfor %}
+                            <span class="row-label">{{ row.letter }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="legend">
+                {% for item in legend %}
+                    <span><span class="seat seat-{{ item.key }}"></span> {{ item.label }} · {{ item.price|inr }}</span>
+                {% endfor %}
+                <span><span class="seat selected"></span> Selected</span>
+                <span><span class="seat taken"></span> Booked</span>
+            </div>
+        </div>
+
+        <!-- ============ SUMMARY ============ -->
+        <aside class="summary-card">
+            <h3>Your Selection</h3>
+            <p class="muted">Max {{ MAX_SEATS }} seats per booking · click a seat again to remove it</p>
+
+            <div class="seat-chips" id="seat-chips">
+                <span class="muted">No seats selected yet</span>
+            </div>
+
+            <div class="summary-line"><span>Seats selected</span><strong id="seat-count">0</strong></div>
+            <div id="seat-breakdown"></div>
+            <div class="summary-line"><span>Subtotal</span><strong id="seat-subtotal">₹0</strong></div>
+            <div class="summary-line"><span>Convenience fee ({{ FEE_PERCENT }}%)</span><strong id="seat-fee">₹0</strong></div>
+            <div class="total-line"><span>Total</span><span id="seat-total">₹0</span></div>
+
+            <form method="post" action="{{ url_for('checkout') }}" id="seat-form" class="mt-2">
+                <input type="hidden" name="event_id" value="{{ event.id }}">
+                <input type="hidden" name="seats" id="seats-input" value="">
+                <button type="submit" id="continue-btn" class="btn btn-primary btn-block btn-lg" disabled>Continue to Checkout →</button>
+            </form>
+
+            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-outline btn-block mt-1">← Back to Event</a>
+            <p class="secure-note">{{ event.total_seats - taken_count }} of {{ event.total_seats }} seats still available</p>
+        </aside>
+    </div>
+</section>
+
+<!-- Sticky bar shown on phones and tablets -->
+<div class="mobile-bar" id="mobile-bar">
+    <div>
+        <strong id="bar-count">0 seats</strong>
+        <span id="bar-total">₹0</span>
+    </div>
+    <button type="submit" form="seat-form" class="btn btn-primary" id="bar-btn" disabled>Checkout →</button>
+</div>
+
+{% endblock %}

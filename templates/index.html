@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}EventEase – Book Tickets to Amazing Events{% endblock %}
+
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+    <div class="container hero-content">
+        <span class="hero-badge">✨ Your next unforgettable experience starts here</span>
+        <h1>Discover &amp; Book <span class="gradient-text">Amazing Events</span> Near You</h1>
+        <p class="hero-sub">Concerts, conferences, comedy nights and festivals. Pick your seats, pay securely and get your digital ticket in seconds.</p>
+
+        <form action="{{ url_for('events') }}" method="get" class="hero-search">
+            <input type="text" name="q" placeholder="Search events, venues or cities…" aria-label="Search events">
+            <select name="category" aria-label="Category">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">🔍 Search</button>
+        </form>
+
+        <div class="hero-stats">
+            <div><strong data-count="{{ stats.events }}">0</strong><span>Upcoming Events</span></div>
+            <div><strong data-count="{{ stats.tickets }}" data-suffix="+">0</strong><span>Tickets Booked</span></div>
+            <div><strong data-count="{{ stats.cities }}">0</strong><span>Cities</span></div>
+            <div><strong data-count="{{ stats.users }}" data-suffix="+">0</strong><span>Happy Users</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<section class="section section-tight">
+    <div class="container">
+        {% set icons = {'Concert': '🎵', 'Conference': '💼', 'Sports': '🏏', 'Comedy': '🎤', 'Festival': '🎪', 'Workshop': '🛠️', 'Theatre': '🎭'} %}
+        <div class="category-list">
+            {% for cat in categories %}
+                <a href="{{ url_for('events', category=cat) }}" class="category-chip reveal">
+                    <span class="chip-icon">{{ icons.get(cat, '🎟️') }}</span>{{ cat }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ============ FEATURED EVENTS ============ -->
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Upcoming Events</h2>
+                <p class="section-sub">Grab your seats before they are gone.</p>
+            </div>
+            <a href="{{ url_for('events') }}" class="btn btn-outline">View All Events →</a>
+        </div>
+
+        {% if events %}
+            <div class="grid grid-3">
+                {% for event in events %}
+                    {% set left = event.total_seats - event.booked_count %}
+                    <article class="event-card reveal">
+                        <a href="{{ url_for('event_detail', event_id=event.id) }}" class="card-img"
+                           style="background-image: url('{{ event.image_url }}');">
+                            <span class="card-badge">{{ event.category }}</span>
+                            <span class="date-badge"><strong>{{ event.event_date|day_num }}</strong>{{ event.event_date|month_short }}</span>
+                        </a>
+                        <div class="card-body">
+                            <h3><a href="{{ url_for('event_detail', event_id=event.id) }}">{{ event.title }}</a></h3>
+                            <p class="card-meta">📍 {{ event.venue }}, {{ event.city }}</p>
+                            <p class="card-meta">🕒 {{ event.event_date|nice_date }} · {{ event.event_time|nice_time }}</p>
+
+                            <div class="seats-bar">
+                                <div class="seats-bar-fill" style="width: {{ (event.booked_count / event.total_seats * 100)|round|int }}%;"></div>
+                            </div>
+                            <p class="seats-text {% if left <= 10 %}seats-low{% endif %}">
+                                {% if left <= 0 %}Sold out
+                                {% elif left <= 10 %}🔥 Only {{ left }} seats left
+                                {% else %}{{ left }} seats available{% endif %}
+                            </p>
+
+                            <div class="card-footer">
+                                <span class="price">{{ event.price|inr }} <small>onwards</small></span>
+                                {% if left <= 0 %}
+                                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-light btn-sm">Details</a>
+                                {% else %}
+                                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">Book Now</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎭</div>
+                <h3>No upcoming events yet</h3>
+                <p>Please check back soon for exciting new events.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="section section-alt">
+    <div class="container">
+        <div class="text-center">
+            <h2 class="section-title">How EventEase Works</h2>
+            <p class="section-sub">Booking your tickets takes less than a minute.</p>
+        </div>
+        <div class="steps">
+            <div class="step reveal">
+                <div class="step-icon">🔎</div>
+                <h3>1. Find an Event</h3>
+                <p>Browse or search events by category, city or price.</p>
+            </div>
+            <div class="step reveal">
+                <div class="step-icon">💺</div>
+                <h3>2. Pick Your Seats</h3>
+                <p>Choose the exact seats you like on the interactive seat map.</p>
+            </div>
+            <div class="step reveal">
+                <div class="step-icon">💳</div>
+                <h3>3. Pay Securely</h3>
+                <p>Complete a quick and safe checkout with card, UPI or net banking.</p>
+            </div>
+            <div class="step reveal">
+                <div class="step-icon">📱</div>
+                <h3>4. Get Your Ticket</h3>
+                <p>Receive an instant digital ticket you can show at the entrance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CALL TO ACTION ============ -->
+<section class="section">
+    <div class="container">
+        <div class="cta-banner reveal">
+            <div>
+                <h2>Ready for your next great experience?</h2>
+                <p>Create a free account and start booking in seconds.</p>
+            </div>
+            {% if is_logged_in %}
+                <a href="{{ url_for('events') }}" class="btn btn-light btn-lg">Browse Events</a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started – It's Free</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

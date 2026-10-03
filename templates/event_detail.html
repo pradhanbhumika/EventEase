@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} – EventEase{% endblock %}
+
+{% block content %}
+
+<!-- ============ EVENT HERO ============ -->
+<section class="detail-hero" style="background-image: url('{{ event.image_url }}');">
+    <div class="container">
+        <span class="card-badge" style="position: static; display: inline-block;">{{ event.category }}</span>
+        <h1>{{ event.title }}</h1>
+        <div class="detail-meta">
+            <span>📅 {{ event.event_date|nice_date }}</span>
+            <span>🕒 {{ event.event_time|nice_time }}</span>
+            <span>📍 {{ event.venue }}, {{ event.city }}</span>
+        </div>
+
+        {% if not is_past %}
+            <div class="countdown" data-countdown="{{ event.event_date }}T{{ event.event_time }}">
+                <div class="cd-box"><strong data-unit="days">00</strong><span>Days</span></div>
+                <div class="cd-box"><strong data-unit="hours">00</strong><span>Hours</span></div>
+                <div class="cd-box"><strong data-unit="minutes">00</strong><span>Minutes</span></div>
+                <div class="cd-box"><strong data-unit="seconds">00</strong><span>Seconds</span></div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ============ DETAILS + BOOKING CARD ============ -->
+<section class="container">
+    <div class="detail-layout">
+
+        <div>
+            <div class="detail-main">
+                <h2>About this event</h2>
+                <p>{{ event.description }}</p>
+
+                <h2 style="margin-top: 2rem;">Event details</h2>
+                <ul class="info-list">
+                    <li><span>Category</span><span>{{ event.category }}</span></li>
+                    <li><span>Date</span><span>{{ event.event_date|nice_date }}</span></li>
+                    <li><span>Time</span><span>{{ event.event_time|nice_time }}</span></li>
+                    <li><span>Venue</span><span>{{ event.venue }}</span></li>
+                    <li><span>City</span><span>{{ event.city }}</span></li>
+                    <li><span>Total seats</span><span>{{ event.total_seats }}</span></li>
+                    <li><span>Seats available</span><span>{{ seats_left }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <aside class="booking-card">
+            <small class="muted">{% if tiers|length > 1 %}Tickets start from{% else %}Ticket price{% endif %}</small>
+            <div class="big-price">{{ event.price|inr }} <small class="muted" style="font-size: .8rem; font-weight: 500;">per seat</small></div>
+
+            {% if tiers|length > 1 %}
+                <div class="tier-list">
+                    {% for tier in tiers %}
+                        <div class="tier-item tier-{{ tier.key }}">
+                            <span>{{ tier.label }} seats</span>
+                            <strong>{{ tier.price|inr }}</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="seats-bar" style="margin-top: 1.2rem;">
+                <div class="seats-bar-fill" style="width: {{ (event.booked_count / event.total_seats * 100)|round|int }}%;"></div>
+            </div>
+            <p class="seats-text {% if seats_left <= 10 %}seats-low{% endif %}">
+                {% if sold_out %}Sold out
+                {% elif seats_left <= 10 %}🔥 Only {{ seats_left }} seats left
+                {% else %}{{ seats_left }} of {{ event.total_seats }} seats available{% endif %}
+            </p>
+
+            <div class="mt-3">
+                {% if is_past %}
+                    <button class="btn btn-primary btn-block btn-lg" disabled>Event has ended</button>
+                {% elif sold_out %}
+                    <button class="btn btn-primary btn-block btn-lg" disabled>Sold Out</button>
+                {% else %}
+                    <a href="{{ url_for('select_seats', event_id=event.id) }}" class="btn btn-primary btn-block btn-lg">💺 Select Seats</a>
+                    {% if not is_logged_in %}
+                        <p class="form-hint text-center mt-1">You will be asked to log in first.</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <p class="secure-note">🔒 Secure checkout · Instant digital ticket with QR code</p>
+        </aside>
+    </div>
+</section>
+
+<!-- ============ RELATED EVENTS ============ -->
+{% if related %}
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">More {{ event.category }} events</h2>
+                <p class="section-sub">You might also like these.</p>
+            </div>
+        </div>
+        <div class="grid grid-3">
+            {% for item in related %}
+                {% set left = item.total_seats - item.booked_count %}
+                <article class="event-card reveal">
+                    <a href="{{ url_for('event_detail', event_id=item.id) }}" class="card-img"
+                       style="background-image: url('{{ item.image_url }}');">
+                        <span class="card-badge">{{ item.category }}</span>
+                        <span class="date-badge"><strong>{{ item.event_date|day_num }}</strong>{{ item.event_date|month_short }}</span>
+                    </a>
+                    <div class="card-body">
+                        <h3><a href="{{ url_for('event_detail', event_id=item.id) }}">{{ item.title }}</a></h3>
+                        <p class="card-meta">📍 {{ item.venue }}, {{ item.city }}</p>
+                        <p class="card-meta">🕒 {{ item.event_date|nice_date }} · {{ item.event_time|nice_time }}</p>
+                        <p class="seats-text {% if left <= 10 %}seats-low{% endif %}" style="margin-top: .8rem;">
+                            {% if left <= 0 %}Sold out{% else %}{{ left }} seats available{% endif %}
+                        </p>
+                        <div class="card-footer">
+                            <span class="price">{{ item.price|inr }} <small>onwards</small></span>
+                            <a href="{{ url_for('event_detail', event_id=item.id) }}" class="btn btn-primary btn-sm">View</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

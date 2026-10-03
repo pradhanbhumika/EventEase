@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}All Bookings – EventEase Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-layout">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="admin-sidebar">
+            <h4>Admin Panel</h4>
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_events') }}">🎭 Manage Events</a>
+            <a href="{{ url_for('admin_add_event') }}">➕ Add Event</a>
+            <a href="{{ url_for('admin_bookings') }}" class="active">🎫 All Bookings</a>
+            <a href="{{ url_for('index') }}">🌐 View Website</a>
+        </aside>
+
+        <!-- ============ CONTENT ============ -->
+        <div>
+            <div class="admin-head">
+                <h1>All Bookings</h1>
+            </div>
+
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">🎫</div>
+                    <small>Bookings{% if q %} (filtered){% endif %}</small>
+                    <strong>{{ bookings|length }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💺</div>
+                    <small>Tickets</small>
+                    <strong>{{ total_tickets }}</strong>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-icon">💰</div>
+                    <small>Revenue</small>
+                    <strong>{{ total_revenue|inr }}</strong>
+                </div>
+            </div>
+
+            <form method="get" action="{{ url_for('admin_bookings') }}" class="filter-bar" style="margin: 0 0 1.5rem;">
+                <input type="text" name="q" class="form-control" value="{{ q }}"
+                       placeholder="Search by booking ID, customer name, email or event…" aria-label="Search bookings">
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
+                {% if q %}
+                    <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline">Clear</a>
+                {% endif %}
+            </form>
+
+            {% if bookings %}
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer</th>
+                                <th>Event</th>
+                                <th>Seats</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Booked On</th>
+                                <th>Ticket</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                                <tr>
+                                    <td><strong>{{ b.booking_code }}</strong><br><small class="muted">{{ b.transaction_id }}</small></td>
+                                    <td>{{ b.user_name }}<br><small class="muted">{{ b.user_email }}</small></td>
+                                    <td>{{ b.title }}<br><small class="muted">{{ b.event_date|nice_date }}</small></td>
+                                    <td>{{ b.seats.replace(',', ', ') }}<br><small class="muted">{{ b.num_tickets }} ticket{{ '' if b.num_tickets == 1 else 's' }}</small></td>
+                                    <td><strong>{{ b.total_amount|inr }}</strong></td>
+                                    <td>{{ {'card': 'Card', 'upi': 'UPI', 'netbanking': 'Net Banking'}.get(b.payment_method, b.payment_method) }}</td>
+                                    <td>{{ b.booked_at|nice_datetime }}</td>
+                                    <td><a href="{{ url_for('ticket', booking_id=b.id) }}" class="btn btn-outline btn-sm">View</a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3>No bookings found</h3>
+                    <p>{% if q %}No bookings match your search.{% else %}No tickets have been booked yet.{% endif %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

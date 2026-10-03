@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket {{ booking.booking_code }} – EventEase{% endblock %}
+
+{% block content %}
+<section class="eticket-page">
+    <div class="container">
+
+        <!-- This whole block is what gets printed / downloaded -->
+        <div class="eticket" id="ticket-card">
+
+            <div class="eticket-main">
+                <div class="eticket-banner">
+                    <span class="eticket-brand">🎟️ Event<b>Ease</b> · E-Ticket</span>
+                    <span class="eticket-cat">{{ booking.category }}</span>
+                </div>
+
+                <div class="eticket-body">
+                    <h1 class="eticket-title">{{ booking.title }}</h1>
+                    <p class="eticket-venue">📍 {{ booking.venue }}, {{ booking.city }}</p>
+
+                    <div class="eticket-grid">
+                        <div><small>Date</small><strong>{{ booking.event_date|nice_date }}</strong></div>
+                        <div><small>Time</small><strong>{{ booking.event_time|nice_time }}</strong></div>
+                        <div><small>Admit</small><strong>{{ booking.num_tickets }} person{{ '' if booking.num_tickets == 1 else 's' }}</strong></div>
+                        <div><small>Attendee</small><strong>{{ booking.user_name }}</strong></div>
+                        <div><small>Amount paid</small><strong>{{ booking.total_amount|inr }}</strong></div>
+                        <div><small>Transaction ID</small><strong>{{ booking.transaction_id }}</strong></div>
+                    </div>
+
+                    <div class="eticket-seats">
+                        <small>Your seats</small>
+                        <div class="eticket-seat-list">
+                            {% for seat in seat_list %}<span>{{ seat }}</span>{% endfor %}
+                        </div>
+                    </div>
+
+                    <p class="eticket-note">Please carry a valid photo ID. This ticket is valid for one entry per seat and must be shown at the gate (printed or on your phone).</p>
+                </div>
+            </div>
+
+            <div class="eticket-stub">
+                {% if qr_code %}
+                    <img class="eticket-qr" src="{{ qr_code }}" alt="QR code for booking {{ booking.booking_code }}">
+                {% else %}
+                    <div class="eticket-qr eticket-qr-missing">QR unavailable.<br>Run<br><code>pip install -r requirements.txt</code></div>
+                {% endif %}
+
+                <div>
+                    <small>Booking ID</small>
+                    <div class="eticket-code">{{ booking.booking_code }}</div>
+                </div>
+
+                {% if booking.event_date < today %}
+                    <span class="status-badge past">Completed</span>
+                {% else %}
+                    <span class="status-badge">✓ {{ booking.status }}</span>
+                {% endif %}
+
+                <small>Scan at the entrance</small>
+            </div>
+        </div>
+
+        <div class="ticket-actions">
+            <button type="button" class="btn btn-primary" data-print>🖨️ Print Ticket</button>
+            <button type="button" class="btn btn-outline" data-download-ticket
+                    data-filename="EventEase-Ticket-{{ booking.booking_code }}">⬇️ Download Image</button>
+            {% if qr_code %}
+                <a href="{{ qr_code }}" download="QR-{{ booking.booking_code }}.png" class="btn btn-outline">▦ Download QR</a>
+            {% endif %}
+            <button type="button" class="btn btn-light" data-copy="{{ verify_url }}" data-copy-message="Ticket link copied to clipboard">🔗 Copy Ticket Link</button>
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-light">← My Bookings</a>
+        </div>
+
+        <p class="text-center muted mt-2 no-print" style="font-size: .85rem;">
+            Tip: in the print window choose “Save as PDF” to keep a PDF copy of your ticket.
+        </p>
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Used only for the "Download Image" button -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+{% endblock %}

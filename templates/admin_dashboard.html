@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard – EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-layout">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="admin-sidebar">
+            <h4>Admin Panel</h4>
+            <a href="{{ url_for('admin_dashboard') }}" class="active">📊 Dashboard</a>
+            <a href="{{ url_for('admin_events') }}">🎭 Manage Events</a>
+            <a href="{{ url_for('admin_add_event') }}">➕ Add Event</a>
+            <a href="{{ url_for('admin_bookings') }}">🎫 All Bookings</a>
+            <a href="{{ url_for('index') }}">🌐 View Website</a>
+        </aside>
+
+        <!-- ============ CONTENT ============ -->
+        <div>
+            <div class="admin-head">
+                <h1>Dashboard</h1>
+                <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm">➕ Add New Event</a>
+            </div>
+
+            <div class="stat-cards">
+                <div class="stat-card highlight">
+                    <div class="stat-icon">💰</div>
+                    <small>Total Revenue</small>
+                    <strong>{{ stats.revenue|inr }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎫</div>
+                    <small>Total Bookings</small>
+                    <strong>{{ stats.bookings }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💺</div>
+                    <small>Tickets Sold</small>
+                    <strong>{{ stats.tickets }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎭</div>
+                    <small>Total Events</small>
+                    <strong>{{ stats.events }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <small>Registered Users</small>
+                    <strong>{{ stats.users }}</strong>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <small>Avg. Booking Value</small>
+                    <strong>{{ stats.average|round|int|inr }}</strong>
+                </div>
+            </div>
+
+            <!-- Revenue by event -->
+            <div class="card-panel" style="margin-bottom: 2rem;">
+                <h2>Revenue by Event</h2>
+                {% if revenue_by_event %}
+                    {% for row in revenue_by_event %}
+                        <div class="bar-row">
+                            <div class="label" title="{{ row.title }}">{{ row.title }}</div>
+                            <div class="bar">
+                                <div class="bar-fill" style="width: {{ (row.revenue / max_revenue * 100)|round|int }}%;"></div>
+                            </div>
+                            <div class="value">{{ row.revenue|inr }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">No events yet.</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent bookings -->
+            <div class="admin-head">
+                <h2 style="font-size: 1.25rem;">Recent Bookings</h2>
+                <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline btn-sm">View All →</a>
+            </div>
+
+            {% if recent %}
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer</th>
+                                <th>Event</th>
+                                <th>Seats</th>
+                                <th>Amount</th>
+                                <th>Booked On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in recent %}
+                                <tr>
+                                    <td><strong>{{ b.booking_code }}</strong></td>
+                                    <td>{{ b.user_name }}<br><small class="muted">{{ b.user_email }}</small></td>
+                                    <td>{{ b.title }}</td>
+                                    <td>{{ b.seats.replace(',', ', ') }}</td>
+                                    <td><strong>{{ b.total_amount|inr }}</strong></td>
+                                    <td>{{ b.booked_at|nice_datetime }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🎫</div>
+                    <h3>No bookings yet</h3>
+                    <p>Bookings will appear here as soon as customers start buying tickets.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

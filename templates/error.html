@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} – EventEase{% endblock %}
+
+{% block content %}
+<section class="container">
+    <div class="status-box">
+        <div class="error-code gradient-text">{{ code }}</div>
+        <h1 style="margin-top: .6rem;">{{ title }}</h1>
+        <p class="muted mt-1">{{ message }}</p>
+
+        <div class="btn-row" style="margin-top: 1.6rem;">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">🏠 Go Home</a>
+            <a href="{{ url_for('events') }}" class="btn btn-outline">Browse Events</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

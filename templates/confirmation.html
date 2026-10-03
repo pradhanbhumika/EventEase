@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Confirmed – EventEase{% endblock %}
+
+{% block content %}
+<section class="container">
+    <div class="confirm-box">
+        <div class="check-circle">✓</div>
+        <h1>Booking Confirmed!</h1>
+        <p class="muted mt-1">Thank you, {{ booking.user_name }}. Your tickets are ready.</p>
+
+        <p class="mt-2">
+            Booking ID (click to copy)<br>
+            <span class="booking-code" data-copy="{{ booking.booking_code }}" title="Click to copy">{{ booking.booking_code }}</span>
+        </p>
+
+        {% if qr_code %}
+            <div class="confirm-qr">
+                <img src="{{ qr_code }}" alt="QR code for booking {{ booking.booking_code }}">
+                <small>Show this QR code at the entrance</small>
+            </div>
+        {% endif %}
+
+        <div class="confirm-details">
+            <ul class="info-list">
+                <li><span>Event</span><span>{{ booking.title }}</span></li>
+                <li><span>Date &amp; time</span><span>{{ booking.event_date|nice_date }}, {{ booking.event_time|nice_time }}</span></li>
+                <li><span>Venue</span><span>{{ booking.venue }}, {{ booking.city }}</span></li>
+                <li><span>Seats</span><span>{{ seat_list|join(', ') }}</span></li>
+                <li><span>Tickets</span><span>{{ booking.num_tickets }}</span></li>
+                <li><span>Subtotal</span><span>{{ booking.subtotal|inr }}</span></li>
+                <li><span>Convenience fee</span><span>{{ booking.fee|inr }}</span></li>
+                <li><span>Total paid</span><span>{{ booking.total_amount|inr }}</span></li>
+                <li><span>Payment method</span><span>{{ {'card': 'Card', 'upi': 'UPI', 'netbanking': 'Net Banking'}.get(booking.payment_method, booking.payment_method) }}</span></li>
+                <li><span>Transaction ID</span><span>{{ booking.transaction_id }}</span></li>
+                <li><span>Booked on</span><span>{{ booking.booked_at|nice_datetime }}</span></li>
+            </ul>
+        </div>
+
+        <div class="btn-row">
+            <a href="{{ url_for('ticket', booking_id=booking.id) }}" class="btn btn-primary">🎫 View Digital Ticket</a>
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-outline">My Bookings</a>
+            <a href="{{ url_for('events') }}" class="btn btn-light">Browse More Events</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout – {{ event.title }}{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>Checkout</h1>
+        <p>Review your order and complete the payment.</p>
+    </div>
+</section>
+
+<section class="container">
+    <div class="checkout-layout">
+
+        <!-- ============ PAYMENT FORM ============ -->
+        <div class="card-panel">
+            <h2>💳 Payment Details</h2>
+
+            <div class="demo-note">
+                ⚠️ <strong>Demo payment only.</strong> No real money is charged.
+                Test card: <strong>4111 1111 1111 1111</strong>, any future expiry (e.g. 12/34), any 3-digit CVV.
+                To see a declined payment use <strong>4000 0000 0000 0002</strong>.
+            </div>
+
+            <div class="pay-tabs">
+                <button type="button" class="pay-tab" data-method="card">💳 Card</button>
+                <button type="button" class="pay-tab" data-method="upi">📱 UPI</button>
+                <button type="button" class="pay-tab" data-method="netbanking">🏦 Net Banking</button>
+            </div>
+
+            <form method="post" action="{{ url_for('pay') }}" id="payment-form" novalidate>
+                <input type="hidden" name="event_id" value="{{ event.id }}">
+                <input type="hidden" name="seats" value="{{ seats_csv }}">
+                <input type="hidden" name="payment_method" id="payment-method" value="{{ selected_method }}">
+
+                <!-- Card -->
+                <div class="pay-panel" id="panel-card">
+                    <div class="form-group">
+                        <label for="card_number">Card number</label>
+                        <input type="text" id="card_number" name="card_number" class="form-control"
+                               placeholder="1234 5678 9012 3456" inputmode="numeric" autocomplete="off" maxlength="19">
+                    </div>
+                    <div class="form-group">
+                        <label for="card_name">Name on card</label>
+                        <input type="text" id="card_name" name="card_name" class="form-control"
+                               placeholder="As printed on your card" autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card_expiry">Expiry (MM/YY)</label>
+                            <input type="text" id="card_expiry" name="card_expiry" class="form-control"
+                                   placeholder="MM/YY" inputmode="numeric" autocomplete="off" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="card_cvv">CVV</label>
+                            <input type="password" id="card_cvv" name="card_cvv" class="form-control"
+                                   placeholder="123" inputmode="numeric" autocomplete="off" maxlength="3">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPI -->
+                <div class="pay-panel" id="panel-upi">
+                    <div class="form-group">
+                        <label for="upi_id">UPI ID</label>
+                        <input type="text" id="upi_id" name="upi_id" class="form-control"
+                               placeholder="yourname@bank" autocomplete="off">
+                        <p class="form-hint">Example: rahul@okhdfcbank</p>
+                    </div>
+                </div>
+
+                <!-- Net banking -->
+                <div class="pay-panel" id="panel-netbanking">
+                    <div class="form-group">
+                        <label for="bank">Select your bank</label>
+                        <select id="bank" name="bank" class="form-control">
+                            <option value="">-- Choose a bank --</option>
+                            {% for bank in banks %}
+                                <option value="{{ bank }}">{{ bank }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" id="pay-btn" class="btn btn-primary btn-block btn-lg mt-2">
+                    Pay {{ summary.total|inr }}
+                </button>
+                <p class="secure-note">🔒 Your payment is encrypted and secure (simulated).</p>
+            </form>
+        </div>
+
+        <!-- ============ ORDER SUMMARY ============ -->
+        <aside class="summary-card">
+            <h3>Order Summary</h3>
+
+            <div class="order-event">
+                <div class="thumb" style="background-image: url('{{ event.image_url }}');"></div>
+                <div>
+                    <h4>{{ event.title }}</h4>
+                    <p>{{ event.event_date|nice_date }} · {{ event.event_time|nice_time }}</p>
+                    <p>{{ event.venue }}, {{ event.city }}</p>
+                </div>
+            </div>
+
+            <p class="muted">Selected seats</p>
+            <div class="seat-chips">
+                {% for seat in seats %}
+                    <span class="seat-chip">{{ seat }}</span>
+                {% endfor %}
+            </div>
+
+            {% for item in summary.breakdown %}
+                <div class="summary-line">
+                    <span>{{ item.label }} × {{ item.count }} ({{ item.price|inr }} each)</span>
+                    <strong>{{ item.amount|inr }}</strong>
+                </div>
+            {% endfor %}
+            <div class="summary-line"><span>Subtotal ({{ count }} ticket{{ '' if count == 1 else 's' }})</span><strong>{{ summary.subtotal|inr }}</strong></div>
+            <div class="summary-line"><span>Convenience fee ({{ FEE_PERCENT }}%)</span><strong>{{ summary.fee|inr }}</strong></div>
+            <div class="total-line"><span>Total payable</span><span>{{ summary.total|inr }}</span></div>
+
+            <a href="{{ url_for('select_seats', event_id=event.id) }}" class="btn btn-outline btn-block mt-2">← Change Seats</a>
+        </aside>
+    </div>
+</section>
+
+<!-- Fake "processing payment" screen -->
+<div class="payment-overlay" id="payment-overlay">
+    <div>
+        <div class="spinner"></div>
+        <h3 style="color: #fff;">Processing your payment…</h3>
+        <p>Please do not refresh or close this page.</p>
+    </div>
+</div>
+
+{% endblock %}

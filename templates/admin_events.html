@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Events – EventEase Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-layout">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="admin-sidebar">
+            <h4>Admin Panel</h4>
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" class="active">🎭 Manage Events</a>
+            <a href="{{ url_for('admin_add_event') }}">➕ Add Event</a>
+            <a href="{{ url_for('admin_bookings') }}">🎫 All Bookings</a>
+            <a href="{{ url_for('index') }}">🌐 View Website</a>
+        </aside>
+
+        <!-- ============ CONTENT ============ -->
+        <div>
+            <div class="admin-head">
+                <h1>Manage Events</h1>
+                <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary btn-sm">➕ Add New Event</a>
+            </div>
+
+            {% if events %}
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Price</th>
+                                <th>Seats Booked</th>
+                                <th>Revenue</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ event.title }}</strong><br>
+                                        <small class="muted">{{ event.category }}</small>
+                                    </td>
+                                    <td>{{ event.event_date|nice_date }}<br><small class="muted">{{ event.event_time|nice_time }}</small></td>
+                                    <td>{{ event.venue }}<br><small class="muted">{{ event.city }}</small></td>
+                                    <td>{{ event.price|inr }}</td>
+                                    <td>{{ event.booked_count }} / {{ event.total_seats }}</td>
+                                    <td><strong>{{ event.revenue|inr }}</strong></td>
+                                    <td>
+                                        {% if event.event_date < today %}
+                                            <span class="status-badge past">Past</span>
+                                        {% elif event.booked_count >= event.total_seats %}
+                                            <span class="status-badge past">Sold out</span>
+                                        {% else %}
+                                            <span class="status-badge">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="actions">
+                                            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-light btn-sm" style="border: 1px solid var(--border);">View</a>
+                                            <a href="{{ url_for('admin_edit_event', event_id=event.id) }}" class="btn btn-outline btn-sm">Edit</a>
+                                            <form method="post" action="{{ url_for('admin_delete_event', event_id=event.id) }}"
+                                                  data-confirm="Delete '{{ event.title }}'? All its bookings will also be deleted. This cannot be undone.">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🎭</div>
+                    <h3>No events yet</h3>
+                    <p>Add your first event to get started.</p>
+                    <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary">Add Event</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
