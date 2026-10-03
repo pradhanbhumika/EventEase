@@ -186,3 +186,6 @@ git check-ignore -v eventease.db   # confirm a file is ignored
 - The admin credentials above are demo values for a college project.
 ## Author
 Student: Bhumika Pradhan
+
+## Git Practical Demo
+This section was added on the feature-readme branch.
