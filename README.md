@@ -184,3 +184,5 @@ git check-ignore -v eventease.db   # confirm a file is ignored
 - Double booking of a seat is blocked by a database UNIQUE rule.
 - Payments are simulated only. Never enter real card details.
 - The admin credentials above are demo values for a college project.
+## Author
+Student: Bhumika Pradhan
