@@ -52,6 +52,43 @@ BANKS = ["State Bank of India", "HDFC Bank", "ICICI Bank",
 DEFAULT_IMAGE = ("https://images.unsplash.com/photo-1501281668745-f7f57925c3b4"
                  "?auto=format&fit=crop&w=1000&q=60")
 
+# Filter and sort choices for the Events page: (value in the URL, label shown)
+PRICE_FILTERS = [
+    ("under_500", "Under ₹500"),
+    ("500_1000", "₹500 – ₹1,000"),
+    ("1000_2500", "₹1,000 – ₹2,500"),
+    ("2500_plus", "₹2,500+"),
+]
+DATE_FILTERS = [
+    ("today", "Today"),
+    ("week", "This Week"),      # today + the next 6 days
+    ("month", "This Month"),    # today + the next 29 days
+]
+SORT_OPTIONS = [
+    ("date", "Date: Soonest"),
+    ("date_desc", "Date: Latest"),
+    ("price_low", "Price: Low to High"),
+    ("price_high", "Price: High to Low"),
+    ("name", "Name: A–Z"),
+]
+SORT_SQL = {
+    "date": "e.event_date ASC, e.event_time ASC",
+    "date_desc": "e.event_date DESC, e.event_time DESC",
+    "price_low": "e.price ASC, e.event_date ASC",
+    "price_high": "e.price DESC, e.event_date ASC",
+    "name": "e.title COLLATE NOCASE ASC",
+}
+
+# Used only to show "Mumbai, Maharashtra" on event cards.
+# A city that is not in this list is simply shown by its own name.
+CITY_STATES = {
+    "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Navi Mumbai": "Maharashtra",
+    "Thane": "Maharashtra", "Nagpur": "Maharashtra", "Nashik": "Maharashtra",
+    "Bengaluru": "Karnataka", "Hyderabad": "Telangana", "Chennai": "Tamil Nadu",
+    "Delhi": "Delhi", "Kolkata": "West Bengal", "Ahmedabad": "Gujarat",
+    "Jaipur": "Rajasthan", "Goa": "Goa",
+}
+
 # Seat categories. The event price is the "Standard" price.
 # VIP seats cost 1.5x and Premium seats cost 1.25x.
 TIER_INFO = {
@@ -70,6 +107,183 @@ CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 UPI_RE = re.compile(r"^[\w.\-]{2,}@[A-Za-z]{2,}$")
 URL_RE = re.compile(r"^https?://\S+$", re.IGNORECASE)
+
+# ---------------------------------------------------------------------------
+# Sample events (added automatically the first time the database is created)
+# ---------------------------------------------------------------------------
+_IMG_SUFFIX = "?auto=format&fit=crop&w=1000&q=60"
+_UNSPLASH = "https://images.unsplash.com/photo-"
+
+# One picture per category. Admins can change any event's image URL later.
+SAMPLE_IMAGES = {
+    "Concert": _UNSPLASH + "1459749411175-04bf5292ceea" + _IMG_SUFFIX,
+    "Conference": _UNSPLASH + "1540575467063-178a50c2df87" + _IMG_SUFFIX,
+    "Sports": _UNSPLASH + "1505373877841-8d25f7d46678" + _IMG_SUFFIX,
+    "Comedy": _UNSPLASH + "1492684223066-81342ee5ff30" + _IMG_SUFFIX,
+    "Festival": _UNSPLASH + "1533174072545-7a4b6ad7a6c3" + _IMG_SUFFIX,
+    "Workshop": _UNSPLASH + "1540575467063-178a50c2df87" + _IMG_SUFFIX,
+    "Theatre": DEFAULT_IMAGE,
+}
+
+# 35 events, 5 per category.
+# Each row: title, category, description, venue, city,
+#           days from today, time (24h), price (Standard seat, in rupees), total seats
+# Dates are relative to the day the database is created, so they are always upcoming.
+SAMPLE_EVENTS = [
+    # ---------------- CONCERTS ----------------
+    ("Soulful Evenings Unplugged", "Concert",
+     "A warm acoustic night of Hindi film classics and soft romantic ballads, "
+     "performed live with strings, guitar and a full vocal ensemble.",
+     "Skyline Arena", "Mumbai", 9, "19:30", 1799, 100),
+    ("Indie Nights Pune", "Concert",
+     "Four rising indie bands, one cosy venue. Original songs, raw energy and "
+     "a crowd that sings along to every chorus.",
+     "The Amp Room", "Pune", 4, "20:30", 799, 50),
+    ("Bollywood Beats", "Concert",
+     "Dance to the biggest Bollywood party hits with a live band, dancers and a "
+     "dazzling light show on an open-air stage.",
+     "Harmony Open Grounds", "Navi Mumbai", 21, "18:00", 1299, 90),
+    ("Electro Pulse Night", "Concert",
+     "Three top DJs, a massive sound system and laser visuals. Doors open at "
+     "9 PM and the bass drops soon after.",
+     "Neon Warehouse", "Bengaluru", 15, "21:00", 2499, 80),
+    ("Sufi & Ghazal Evening", "Concert",
+     "An intimate evening of qawwali, sufi and ghazal in a candle-lit "
+     "courtyard. Come for the poetry, stay for the music.",
+     "Heritage Courtyard", "Hyderabad", 33, "19:00", 999, 60),
+
+    # ---------------- CONFERENCES ----------------
+    ("Tech Innovators Summit", "Conference",
+     "A full-day summit on cloud, web and mobile engineering with talks from "
+     "industry leaders, live demos and a networking lunch.",
+     "Hi-Tech Convention Centre", "Pune", 17, "09:30", 2999, 120),
+    ("AI & Future Tech Conference", "Conference",
+     "Two tracks on machine learning, generative AI and responsible "
+     "automation, with research talks and startup showcases.",
+     "Tech Park Auditorium", "Bengaluru", 28, "09:00", 3999, 150),
+    ("Startup India Meet", "Conference",
+     "Founders, investors and students meet for pitch sessions, funding "
+     "panels and one-to-one mentoring slots.",
+     "Bharat Convention Hall", "Delhi", 11, "10:00", 1499, 100),
+    ("Digital Commerce Expo", "Conference",
+     "Explore the future of online retail, payments and logistics with "
+     "exhibitors, workshops and keynote sessions.",
+     "Grand Expo Centre", "Mumbai", 40, "10:30", 1999, 140),
+    ("Future of Computing Summit", "Conference",
+     "A deep-dive into quantum computing, edge devices and next-generation "
+     "chips, aimed at engineers and researchers.",
+     "Cyber Towers Hall", "Hyderabad", 55, "09:30", 4999, 80),
+
+    # ---------------- SPORTS ----------------
+    ("Mumbai Coastal Run", "Sports",
+     "A scenic 10 km run along the sea front with timing chips, medals for "
+     "all finishers and a post-run breakfast.",
+     "Marine Drive Start Point", "Mumbai", 26, "05:30", 499, 150),
+    ("Premier Cricket Fan Fest", "Sports",
+     "Watch the season finale live from the stands, with big screens, fan "
+     "zones and food stalls all around the stadium.",
+     "Bay Stadium", "Navi Mumbai", 12, "18:30", 899, 70),
+    ("Inter-City Football Championship", "Sports",
+     "Eight city teams compete in a one-day knockout football tournament "
+     "under floodlights. Great atmosphere for families.",
+     "Riverside Football Ground", "Kolkata", 19, "17:00", 349, 120),
+    ("All India Badminton Open", "Sports",
+     "Watch top shuttlers battle it out in singles and doubles on a "
+     "professional indoor court.",
+     "Indoor Sports Complex", "Hyderabad", 7, "10:00", 599, 60),
+    ("Cricket Legends Meet", "Sports",
+     "Retired international players come together for an exhibition match, "
+     "followed by an autograph and photo session.",
+     "Deccan Cricket Ground", "Pune", 45, "15:00", 2799, 100),
+
+    # ---------------- COMEDY ----------------
+    ("Stand-up Saturday", "Comedy",
+     "Six comics, ten minutes each. A fast, fresh and fearless lineup "
+     "of observational comedy.",
+     "Punchline Theatre", "Mumbai", 2, "20:30", 599, 40),
+    ("Laugh Riot Comedy Night", "Comedy",
+     "Five of the funniest stand-up comedians in one evening. Guaranteed to "
+     "leave your cheeks sore from laughing.",
+     "The Laughing Vault", "Thane", 0, "20:00", 499, 40),
+    ("Laugh Factory Pune", "Comedy",
+     "A friendly weekday show with sharp jokes about college life, jobs and "
+     "family WhatsApp groups.",
+     "Giggle Garage", "Pune", 8, "20:00", 399, 35),
+    ("Open Mic Madness", "Comedy",
+     "New comics try out their freshest material in front of a live "
+     "audience. Entry is cheap and the laughs are real.",
+     "The Mic Drop Cafe", "Delhi", 5, "19:00", 199, 30),
+    ("The Comedy Club Live", "Comedy",
+     "A premium headline show with a touring comic, a warm-up act and "
+     "reserved lounge seating.",
+     "Chuckle Lounge", "Bengaluru", 20, "21:00", 1199, 45),
+
+    # ---------------- FESTIVALS ----------------
+    ("Sunset Music Festival", "Festival",
+     "Two stages, food trucks, art installations and a sunset you will never "
+     "forget. Bring your friends and enjoy the ultimate weekend festival.",
+     "Marine Drive Grounds", "Mumbai", 36, "16:00", 1999, 80),
+    ("Mumbai Street Food Festival", "Festival",
+     "Over sixty stalls serving street food from every corner of India, "
+     "with live cooking demos and a chai tasting zone.",
+     "Bandra Open Grounds", "Mumbai", 13, "12:00", 299, 120),
+    ("Pink City Heritage Festival", "Festival",
+     "Folk dance, puppet shows, handicraft bazaars and evening light "
+     "projections celebrating Rajasthan's heritage.",
+     "Heritage Gardens", "Jaipur", 48, "17:00", 1499, 100),
+    ("Navi Mumbai Cultural Fest", "Festival",
+     "A family-friendly weekend of classical dance, regional music, art "
+     "exhibitions and children's activities.",
+     "Central Park Grounds", "Navi Mumbai", 31, "16:30", 399, 110),
+    ("Goa Beats Beach Festival", "Festival",
+     "A sunset-to-midnight beach festival with international DJs, "
+     "beachside food shacks and water sports.",
+     "Sandy Cove Beach", "Goa", 60, "15:00", 3499, 150),
+
+    # ---------------- WORKSHOPS ----------------
+    ("UI/UX Design Workshop", "Workshop",
+     "A hands-on workshop for beginners. Learn the basics of user research, "
+     "wireframing and prototyping, and build your first app design.",
+     "Creative Hub", "Bengaluru", 3, "10:00", 299, 30),
+    ("AI/ML Hands-on Workshop", "Workshop",
+     "Train your first machine learning model in one day. Laptops required, "
+     "no prior experience needed.",
+     "Code Lab Studio", "Pune", 14, "10:00", 1499, 30),
+    ("Photography Masterclass", "Workshop",
+     "Learn composition, lighting and editing from a working photographer, "
+     "including a guided street-photo walk.",
+     "Lens Studio", "Mumbai", 10, "11:00", 999, 25),
+    ("Python Bootcamp for Beginners", "Workshop",
+     "A friendly one-day introduction to Python. Write real programs, "
+     "fix your first bugs and take home practice projects.",
+     "Learning Loft", "Thane", 22, "09:30", 699, 40),
+    ("Digital Marketing Workshop", "Workshop",
+     "Understand SEO, social media ads and email campaigns with live "
+     "examples and a small practical project.",
+     "Skill Hub", "Delhi", 35, "14:00", 549, 35),
+
+    # ---------------- THEATRE ----------------
+    ("Shakespeare Under the Stars", "Theatre",
+     "A magical open-air performance of a timeless classic, performed by a "
+     "talented local theatre group under the night sky.",
+     "Open Air Amphitheatre", "Pune", 6, "19:30", 599, 30),
+    ("Marathi Natak Evening", "Theatre",
+     "A much-loved Marathi family drama full of humour and emotion, "
+     "performed by a veteran stage company.",
+     "Rangmanch Auditorium", "Thane", 16, "19:00", 349, 60),
+    ("Broadway Nights", "Theatre",
+     "Songs and scenes from famous Broadway musicals, performed live with "
+     "full costumes, choreography and a live band.",
+     "Grand Stage Theatre", "Mumbai", 29, "19:30", 1299, 80),
+    ("Modern Theatre Showcase", "Theatre",
+     "Three short experimental plays by young playwrights on city life, "
+     "identity and technology.",
+     "Black Box Studio", "Delhi", 24, "18:30", 799, 40),
+    ("Mumbai Theatre Festival", "Theatre",
+     "A weekend of plays in Hindi, English and Marathi, with interactions "
+     "between audiences and directors after each show.",
+     "City Playhouse", "Mumbai", 38, "18:00", 449, 70),
+]
 
 # ---------------------------------------------------------------------------
 # Database helpers
@@ -165,6 +379,15 @@ def init_db():
     db = sqlite3.connect(DATABASE)
     db.executescript(SCHEMA)
 
+    # Safe migration: add the refund columns to an existing bookings table.
+    # Existing bookings are kept; the new columns are simply empty for them.
+    existing_columns = {row[1] for row in db.execute("PRAGMA table_info(bookings)")}
+    for column, kind in (("refund_status", "TEXT"),
+                         ("refund_amount", "REAL"),
+                         ("cancelled_at", "TEXT")):
+        if column not in existing_columns:
+            db.execute("ALTER TABLE bookings ADD COLUMN {} {}".format(column, kind))
+
     # Default admin account
     admin_exists = db.execute(
         "SELECT COUNT(*) FROM users WHERE role = 'admin'").fetchone()[0]
@@ -174,58 +397,22 @@ def init_db():
             ("Administrator", "admin@eventease.com", generate_password_hash("admin123")))
         print("Admin account created -> admin@eventease.com / admin123")
 
-    # Sample events (dates are relative to today so they are always upcoming)
+    # Sample events (see SAMPLE_EVENTS above). They are added only when the
+    # events table is empty, so events created by an admin are never overwritten.
     event_count = db.execute("SELECT COUNT(*) FROM events").fetchone()[0]
     if event_count == 0:
         today = date.today()
-        img = "?auto=format&fit=crop&w=1000&q=60"
-        samples = [
-            ("Neon Nights Live", "Concert",
-             "An electrifying night of live music, dazzling lights and unforgettable "
-             "performances by top artists. Get ready to dance until midnight!",
-             "Skyline Arena", "Mumbai", 12, "19:00", 1499, 60,
-             "https://images.unsplash.com/photo-1459749411175-04bf5292ceea" + img),
-            ("DevConnect Summit 2026", "Conference",
-             "A full-day conference for developers and tech lovers. Hear from industry "
-             "experts on AI, cloud and web development, and network with peers.",
-             "Hi-Tech Convention Centre", "Pune", 18, "09:30", 799, 50,
-             "https://images.unsplash.com/photo-1540575467063-178a50c2df87" + img),
-            ("Laugh Riot Comedy Night", "Comedy",
-             "Five of the funniest stand-up comedians in one evening. Guaranteed to "
-             "leave your cheeks sore from laughing.",
-             "The Laughing Vault", "Thane", 7, "20:00", 499, 40,
-             "https://images.unsplash.com/photo-1492684223066-81342ee5ff30" + img),
-            ("Sunset Music Festival", "Festival",
-             "Two stages, food trucks, art installations and a sunset you will never "
-             "forget. Bring your friends and enjoy the ultimate weekend festival.",
-             "Marine Drive Grounds", "Mumbai", 25, "16:00", 1999, 80,
-             "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3" + img),
-            ("Premier Cricket Fan League Finals", "Sports",
-             "Watch the season finale live from the stands! Great atmosphere, big "
-             "screens and thrilling cricket action.",
-             "Bay Stadium", "Navi Mumbai", 30, "18:30", 899, 70,
-             "https://images.unsplash.com/photo-1505373877841-8d25f7d46678" + img),
-            ("Shakespeare Under the Stars", "Theatre",
-             "A magical open-air performance of a timeless classic, performed by a "
-             "talented local theatre group under the night sky.",
-             "Open Air Amphitheatre", "Pune", 14, "19:30", 599, 30,
-             DEFAULT_IMAGE),
-            ("UI/UX Design Workshop", "Workshop",
-             "A hands-on workshop for beginners. Learn the basics of user research, "
-             "wireframing and prototyping, and build your first app design.",
-             "Creative Hub", "Bengaluru", 21, "10:00", 299, 30,
-             "https://images.unsplash.com/photo-1540575467063-178a50c2df87" + img),
-        ]
-        for title, cat, desc, venue, city, days, time_, price, seats, image in samples:
+        for (title, category, description, venue, city,
+             days, time_, price, seats) in SAMPLE_EVENTS:
             db.execute(
                 """INSERT INTO events
                    (title, category, description, venue, city, event_date,
                     event_time, price, total_seats, image_url)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (title, cat, desc, venue, city,
+                (title, category, description, venue, city,
                  (today + timedelta(days=days)).isoformat(),
-                 time_, price, seats, image))
-        print("Sample events added.")
+                 time_, price, seats, SAMPLE_IMAGES.get(category, DEFAULT_IMAGE)))
+        print("{} sample events added.".format(len(SAMPLE_EVENTS)))
 
     db.commit()
     db.close()
@@ -284,6 +471,13 @@ def nice_datetime_filter(value):
         return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y, %I:%M %p")
     except (ValueError, TypeError):
         return value
+
+
+@app.template_filter("place")
+def place_filter(city):
+    """'Mumbai' -> 'Mumbai, Maharashtra' (only for cities we know)."""
+    state = CITY_STATES.get(city)
+    return "{}, {}".format(city, state) if state else city
 
 
 @app.context_processor
@@ -584,6 +778,36 @@ def get_booking_or_404(booking_id):
 
 
 # ---------------------------------------------------------------------------
+# Cancellation helpers
+# ---------------------------------------------------------------------------
+CANCEL_WINDOW_HOURS = 24
+
+
+def event_start(booking):
+    """The real start of the event, built from its stored date and time."""
+    try:
+        return datetime.strptime(
+            "{} {}".format(booking["event_date"], booking["event_time"]), "%Y-%m-%d %H:%M")
+    except (ValueError, TypeError):
+        return None
+
+
+def cancellation_check(booking):
+    """Return (allowed, message). Works with a database row or a dict."""
+    if booking["status"] == "Cancelled":
+        return False, "This booking has already been cancelled."
+    start = event_start(booking)
+    if start is None:
+        return False, "The event time is not available, so this booking cannot be cancelled."
+    now = datetime.now()
+    if start <= now:
+        return False, "This event has already taken place, so it cannot be cancelled."
+    if start - now <= timedelta(hours=CANCEL_WINDOW_HOURS):
+        return False, "Cancellation is available only up to 24 hours before the event."
+    return True, ""
+
+
+# ---------------------------------------------------------------------------
 # Error pages
 # ---------------------------------------------------------------------------
 @app.errorhandler(404)
@@ -612,7 +836,7 @@ def index():
         (today,)).fetchall()
     stats = {
         "events": db.execute("SELECT COUNT(*) FROM events WHERE event_date >= ?", (today,)).fetchone()[0],
-        "tickets": db.execute("SELECT COALESCE(SUM(num_tickets), 0) FROM bookings").fetchone()[0],
+        "tickets": db.execute("SELECT COALESCE(SUM(num_tickets), 0) FROM bookings WHERE status != 'Cancelled'").fetchone()[0],
         "cities": db.execute("SELECT COUNT(DISTINCT city) FROM events").fetchone()[0],
         "users": db.execute("SELECT COUNT(*) FROM users WHERE role = 'user'").fetchone()[0],
     }
@@ -621,29 +845,94 @@ def index():
 
 @app.route("/events")
 def events():
+    db = get_db()
+    today = date.today()
+    today_iso = today.isoformat()
+
+    # The locations dropdown is built from the events that are really in the database
+    locations = [row["city"] for row in db.execute(
+        "SELECT DISTINCT city FROM events WHERE event_date >= ? ORDER BY city COLLATE NOCASE",
+        (today_iso,)).fetchall()]
+
+    # Read the filters from the URL and ignore any value that is not allowed
     q = request.args.get("q", "").strip()
     category = request.args.get("category", "").strip()
-    sort = request.args.get("sort", "date")
+    city = request.args.get("city", "").strip()
+    price = request.args.get("price", "").strip()
+    when = request.args.get("when", "").strip()
+    sort = request.args.get("sort", "date").strip()
 
+    if category not in CATEGORIES:
+        category = ""
+    if city not in locations:
+        city = ""
+    if price not in dict(PRICE_FILTERS):
+        price = ""
+    if when not in dict(DATE_FILTERS):
+        when = ""
+    if sort not in SORT_SQL:
+        sort = "date"
+
+    # Build the query. Upcoming events only.
     sql = EVENT_SELECT + " WHERE e.event_date >= ?"
-    params = [date.today().isoformat()]
+    params = [today_iso]
+
     if q:
         sql += " AND (e.title LIKE ? OR e.venue LIKE ? OR e.city LIKE ?)"
         params += ["%" + q + "%"] * 3
     if category:
         sql += " AND e.category = ?"
         params.append(category)
+    if city:
+        sql += " AND e.city = ?"
+        params.append(city)
 
-    order_options = {
-        "date": "e.event_date, e.event_time",
-        "price_low": "e.price ASC",
-        "price_high": "e.price DESC",
-    }
-    sql += " ORDER BY " + order_options.get(sort, order_options["date"])
+    if price == "under_500":
+        sql += " AND e.price < 500"
+    elif price == "500_1000":
+        sql += " AND e.price >= 500 AND e.price <= 1000"
+    elif price == "1000_2500":
+        sql += " AND e.price > 1000 AND e.price < 2500"
+    elif price == "2500_plus":
+        sql += " AND e.price >= 2500"
 
-    all_events = get_db().execute(sql, params).fetchall()
-    return render_template("events.html", events=all_events, q=q,
-                           selected_category=category, sort=sort)
+    if when == "today":
+        sql += " AND e.event_date = ?"
+        params.append(today_iso)
+    elif when == "week":
+        sql += " AND e.event_date <= ?"
+        params.append((today + timedelta(days=6)).isoformat())
+    elif when == "month":
+        sql += " AND e.event_date <= ?"
+        params.append((today + timedelta(days=29)).isoformat())
+
+    sql += " ORDER BY " + SORT_SQL[sort]
+    all_events = db.execute(sql, params).fetchall()
+
+    # Small helpers for the template
+    active_filters = []
+    if q:
+        active_filters.append("Search: “{}”".format(q))
+    if category:
+        active_filters.append("Category: " + category)
+    if city:
+        active_filters.append("Location: " + city)
+    if price:
+        active_filters.append("Price: " + dict(PRICE_FILTERS)[price])
+    if when:
+        active_filters.append("Date: " + dict(DATE_FILTERS)[when])
+
+    # Links for the category chips keep the other filters that are already chosen
+    chip_args = {key: value for key, value in (
+        ("q", q), ("city", city), ("price", price), ("when", when),
+        ("sort", sort if sort != "date" else "")) if value}
+
+    return render_template(
+        "events.html", events=all_events, q=q, selected_category=category,
+        selected_city=city, selected_price=price, selected_when=when, sort=sort,
+        locations=locations, price_options=PRICE_FILTERS,
+        date_options=DATE_FILTERS, sort_options=SORT_OPTIONS,
+        active_filters=active_filters, chip_args=chip_args)
 
 
 @app.route("/event/<int:event_id>")
@@ -833,6 +1122,8 @@ def pay():
 @login_required
 def confirmation(booking_id):
     booking = get_booking_or_404(booking_id)
+    if booking["status"] == "Cancelled":
+        return redirect(url_for("ticket", booking_id=booking_id))
     qr_code, verify_url = ticket_qr(booking)
     return render_template("confirmation.html", booking=booking,
                            seat_list=booking["seats"].split(","),
@@ -867,11 +1158,65 @@ def my_bookings():
         BOOKING_SELECT + " WHERE b.user_id = ? ORDER BY b.id DESC",
         (session["user_id"],)).fetchall()
     today = date.today().isoformat()
-    upcoming = [b for b in rows if b["event_date"] >= today]
+
+    bookings = []
+    for row in rows:
+        item = dict(row)
+        item["can_cancel"], item["cancel_note"] = cancellation_check(row)
+        bookings.append(item)
+
+    cancelled = [b for b in bookings if b["status"] == "Cancelled"]
+    active = [b for b in bookings if b["status"] != "Cancelled"]
+    upcoming = [b for b in active if b["event_date"] >= today]
     upcoming.sort(key=lambda b: (b["event_date"], b["event_time"]))
-    past = [b for b in rows if b["event_date"] < today]
+    past = [b for b in active if b["event_date"] < today]
     return render_template("my_bookings.html", upcoming=upcoming, past=past,
-                           total=len(rows))
+                           cancelled=cancelled, total=len(bookings))
+
+
+@app.route("/booking/<int:booking_id>/cancel", methods=["POST"])
+@login_required
+def cancel_booking(booking_id):
+    db = get_db()
+    booking = db.execute(BOOKING_SELECT + " WHERE b.id = ?", (booking_id,)).fetchone()
+
+    if booking is None:
+        flash("We could not find that booking.", "error")
+        return redirect(url_for("my_bookings"))
+    if booking["user_id"] != session["user_id"]:
+        flash("You can only cancel your own bookings.", "error")
+        return redirect(url_for("my_bookings"))
+
+    allowed, message = cancellation_check(booking)
+    if not allowed:
+        flash(message, "warning")
+        return redirect(url_for("my_bookings"))
+
+    refund = booking["total_amount"]          # the full amount actually paid
+    cancelled_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        cursor = db.execute(
+            """UPDATE bookings
+               SET status = 'Cancelled', refund_status = 'Refund Initiated',
+                   refund_amount = ?, cancelled_at = ?
+               WHERE id = ? AND status != 'Cancelled'""",
+            (refund, cancelled_at, booking_id))
+        if cursor.rowcount == 0:               # someone cancelled it a moment ago
+            db.rollback()
+            flash("This booking has already been cancelled.", "warning")
+            return redirect(url_for("my_bookings"))
+        # Free ONLY the seats that belong to this booking
+        db.execute("DELETE FROM booking_seats WHERE booking_id = ?", (booking_id,))
+        db.commit()
+    except sqlite3.Error:
+        db.rollback()
+        flash("Something went wrong while cancelling. Please try again.", "error")
+        return redirect(url_for("my_bookings"))
+
+    flash("Booking {} cancelled. A refund of {} has been initiated.".format(
+        booking["booking_code"], inr_filter(refund)), "success")
+    return redirect(url_for("my_bookings"))
 
 
 # ---------------------------------------------------------------------------
@@ -901,12 +1246,15 @@ def admin_login():
 @admin_required
 def admin_dashboard():
     db = get_db()
-    revenue = db.execute("SELECT COALESCE(SUM(total_amount), 0) FROM bookings").fetchone()[0]
-    bookings_count = db.execute("SELECT COUNT(*) FROM bookings").fetchone()[0]
+    revenue = db.execute(
+        "SELECT COALESCE(SUM(total_amount), 0) FROM bookings WHERE status != 'Cancelled'").fetchone()[0]
+    bookings_count = db.execute(
+        "SELECT COUNT(*) FROM bookings WHERE status != 'Cancelled'").fetchone()[0]
     stats = {
         "revenue": revenue,
         "bookings": bookings_count,
-        "tickets": db.execute("SELECT COALESCE(SUM(num_tickets), 0) FROM bookings").fetchone()[0],
+        "tickets": db.execute(
+            "SELECT COALESCE(SUM(num_tickets), 0) FROM bookings WHERE status != 'Cancelled'").fetchone()[0],
         "events": db.execute("SELECT COUNT(*) FROM events").fetchone()[0],
         "users": db.execute("SELECT COUNT(*) FROM users WHERE role = 'user'").fetchone()[0],
         "average": (revenue / bookings_count) if bookings_count else 0,
@@ -915,7 +1263,8 @@ def admin_dashboard():
         """SELECT e.id, e.title,
                   COALESCE(SUM(b.total_amount), 0) AS revenue,
                   COALESCE(SUM(b.num_tickets), 0)  AS tickets
-           FROM events e LEFT JOIN bookings b ON b.event_id = e.id
+           FROM events e
+           LEFT JOIN bookings b ON b.event_id = e.id AND b.status != 'Cancelled'
            GROUP BY e.id ORDER BY revenue DESC LIMIT 6""").fetchall()
     max_revenue = max([row["revenue"] for row in revenue_by_event] + [1])
     recent = db.execute(BOOKING_SELECT + " ORDER BY b.id DESC LIMIT 8").fetchall()
@@ -930,7 +1279,8 @@ def admin_events():
     rows = get_db().execute(
         """SELECT e.*,
                   (SELECT COUNT(*) FROM booking_seats bs WHERE bs.event_id = e.id) AS booked_count,
-                  (SELECT COALESCE(SUM(total_amount), 0) FROM bookings b WHERE b.event_id = e.id) AS revenue
+                  (SELECT COALESCE(SUM(total_amount), 0) FROM bookings b
+                    WHERE b.event_id = e.id AND b.status != 'Cancelled') AS revenue
            FROM events e ORDER BY e.event_date DESC""").fetchall()
     return render_template("admin_events.html", events=rows)
 
@@ -1084,10 +1434,14 @@ def admin_bookings():
     sql += " ORDER BY b.id DESC"
 
     bookings = get_db().execute(sql, params).fetchall()
-    total_revenue = sum(b["total_amount"] for b in bookings)
-    total_tickets = sum(b["num_tickets"] for b in bookings)
+    active = [b for b in bookings if b["status"] != "Cancelled"]
+    total_revenue = sum(b["total_amount"] for b in active)
+    total_tickets = sum(b["num_tickets"] for b in active)
+    total_refunded = sum((b["refund_amount"] or 0) for b in bookings
+                         if b["status"] == "Cancelled")
     return render_template("admin_bookings.html", bookings=bookings, q=q,
-                           total_revenue=total_revenue, total_tickets=total_tickets)
+                           total_revenue=total_revenue, total_tickets=total_tickets,
+                           total_refunded=total_refunded)
 
 
 # ---------------------------------------------------------------------------

@@ -2,9 +2,44 @@
 
 {% block title %}My Bookings – EventEase{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Cancelled bookings */
+    .booking-item.cancelled { background: #fcf7f8; border-color: #f5c6d0; }
+    .booking-item.cancelled .thumb { filter: grayscale(1); opacity: .6; }
+    .booking-item.cancelled h3 { color: var(--muted); text-decoration: line-through; }
+    .status-badge.cancelled { background: #fdecef; color: #9f1239; }
+    .refund-box {
+        margin-top: .6rem; padding: .7rem .9rem; border-radius: 12px;
+        background: #fff; border: 1px dashed #f0a9b9; font-size: .85rem; color: var(--text);
+    }
+    .refund-box strong { color: var(--dark); }
+    .refund-box small { display: block; margin-top: .3rem; color: var(--muted); }
+    .cancel-note { margin-top: .5rem; font-size: .8rem; color: var(--muted); }
+
+    /* Cancel confirmation modal */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 3000; display: none; place-items: center;
+        padding: 1rem; background: rgba(20, 18, 43, .65);
+    }
+    .modal-overlay.open { display: grid; animation: slideDown .25s ease; }
+    .modal-box {
+        width: 100%; max-width: 460px; max-height: 92vh; overflow-y: auto;
+        padding: 1.8rem; background: #fff; border-radius: 22px; box-shadow: var(--shadow-lg);
+    }
+    .modal-box h2 { font-size: 1.3rem; margin-bottom: .3rem; }
+    .modal-box .info-list { margin: 1rem 0; background: var(--bg); border-radius: 14px; padding: .3rem 1rem; }
+    .modal-note { color: var(--muted); font-size: .82rem; margin-bottom: 1.2rem; }
+    .modal-actions { display: flex; gap: .7rem; flex-wrap: wrap; }
+    .modal-actions .btn { flex: 1 1 150px; }
+</style>
+{% endblock %}
+
 {% block content %}
 
-{# One small reusable piece for a booking row (used for both tabs) #}
+{% set methods = {'card': 'Card', 'upi': 'UPI', 'netbanking': 'Net Banking'} %}
+
+{# One small reusable piece for an active booking row #}
 {% macro booking_card(booking, past) %}
     <div class="booking-item">
         <div class="thumb" style="background-image: url('{{ booking.image_url }}');"></div>
@@ -15,6 +50,9 @@
             <p>📍 {{ booking.venue }}, {{ booking.city }}</p>
             <p>💺 Seats: <strong>{{ booking.seats.replace(',', ', ') }}</strong> ({{ booking.num_tickets }} ticket{{ '' if booking.num_tickets == 1 else 's' }})</p>
             <p>🧾 {{ booking.booking_code }} · Paid {{ booking.total_amount|inr }}</p>
+            {% if not past and not booking.can_cancel %}
+                <p class="cancel-note">ℹ️ {{ booking.cancel_note }}</p>
+            {% endif %}
         </div>
 
         <div class="booking-actions">
@@ -25,6 +63,48 @@
             {% endif %}
             <a href="{{ url_for('ticket', booking_id=booking.id) }}" class="btn btn-primary btn-sm">🎫 View Ticket</a>
             <a href="{{ url_for('confirmation', booking_id=booking.id) }}" class="btn btn-outline btn-sm">Receipt</a>
+            {% if not past %}
+                {% if booking.can_cancel %}
+                    <button type="button" class="btn btn-danger btn-sm"
+                            data-cancel-url="{{ url_for('cancel_booking', booking_id=booking.id) }}"
+                            data-title="{{ booking.title }}"
+                            data-code="{{ booking.booking_code }}"
+                            data-seats="{{ booking.seats.replace(',', ', ') }} ({{ booking.num_tickets }})"
+                            data-total="{{ booking.total_amount|inr }}"
+                            data-refund="{{ booking.total_amount|inr }}">Cancel Booking</button>
+                {% else %}
+                    <button type="button" class="btn btn-danger btn-sm" disabled
+                            title="{{ booking.cancel_note }}">Cancel Booking</button>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{# A cancelled booking row #}
+{% macro cancelled_card(booking, methods) %}
+    <div class="booking-item cancelled">
+        <div class="thumb" style="background-image: url('{{ booking.image_url }}');"></div>
+
+        <div class="booking-info">
+            <h3>{{ booking.title }}</h3>
+            <p>📅 {{ booking.event_date|nice_date }} · {{ booking.event_time|nice_time }}</p>
+            <p>📍 {{ booking.venue }}, {{ booking.city }}</p>
+            <p>💺 Seats: {{ booking.seats.replace(',', ', ') }} (released) · 🧾 {{ booking.booking_code }}</p>
+
+            <div class="refund-box">
+                <strong>❌ Booking Cancelled</strong>
+                {% if booking.cancelled_at %} on {{ booking.cancelled_at|nice_datetime }}{% endif %}<br>
+                Refund: <strong>{{ (booking.refund_amount if booking.refund_amount is not none else booking.total_amount)|inr }}</strong><br>
+                Refund Status: <strong>{{ booking.refund_status or 'Refund Initiated' }}</strong><br>
+                Refund Method: Original Payment Method ({{ methods.get(booking.payment_method, booking.payment_method) }})
+                <small>Refund will be processed within 5–7 business days.</small>
+            </div>
+        </div>
+
+        <div class="booking-actions">
+            <span class="status-badge cancelled">Cancelled</span>
+            <a href="{{ url_for('ticket', booking_id=booking.id) }}" class="btn btn-outline btn-sm">View Details</a>
         </div>
     </div>
 {% endmacro %}
@@ -53,6 +133,9 @@
                 </button>
                 <button type="button" class="tab-btn" data-tab="past">
                     Past <span class="tab-count">{{ past|length }}</span>
+                </button>
+                <button type="button" class="tab-btn" data-tab="cancelled">
+                    Cancelled <span class="tab-count">{{ cancelled|length }}</span>
                 </button>
             </div>
 
@@ -90,8 +173,90 @@
                     </div>
                 {% endif %}
             </div>
+
+            <!-- Cancelled -->
+            <div class="tab-panel" data-panel="cancelled">
+                {% if cancelled %}
+                    <div class="booking-list">
+                        {% for booking in cancelled %}
+                            {{ cancelled_card(booking, methods) }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <h3>No cancelled bookings</h3>
+                        <p>Bookings you cancel will appear here with their refund details.</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 </section>
 
+<!-- ============ CANCEL CONFIRMATION MODAL ============ -->
+<div class="modal-overlay" id="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+    <div class="modal-box">
+        <h2 id="cancel-title">Are you sure you want to cancel this booking?</h2>
+        <ul class="info-list">
+            <li><span>Event</span><span id="cm-title"></span></li>
+            <li><span>Booking ID</span><span id="cm-code"></span></li>
+            <li><span>Seats</span><span id="cm-seats"></span></li>
+            <li><span>Total amount</span><span id="cm-total"></span></li>
+            <li><span>Refund amount</span><span id="cm-refund"></span></li>
+        </ul>
+        <p class="modal-note">Your seats will be released and the refund goes back to your original payment method within 5–7 business days. This cannot be undone.</p>
+        <form method="post" id="cancel-form" action="">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="cm-keep">Keep Booking</button>
+                <button type="submit" class="btn btn-danger" id="cm-confirm">Yes, Cancel Booking</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var modal = document.getElementById("cancel-modal");
+    if (!modal) return;
+
+    var form = document.getElementById("cancel-form");
+    var confirmButton = document.getElementById("cm-confirm");
+
+    function openModal(button) {
+        form.action = button.dataset.cancelUrl;
+        document.getElementById("cm-title").textContent = button.dataset.title;
+        document.getElementById("cm-code").textContent = button.dataset.code;
+        document.getElementById("cm-seats").textContent = button.dataset.seats;
+        document.getElementById("cm-total").textContent = button.dataset.total;
+        document.getElementById("cm-refund").textContent = button.dataset.refund;
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Yes, Cancel Booking";
+        modal.classList.add("open");
+    }
+
+    function closeModal() { modal.classList.remove("open"); }
+
+    document.querySelectorAll("[data-cancel-url]").forEach(function (button) {
+        button.addEventListener("click", function () { openModal(button); });
+    });
+
+    document.getElementById("cm-keep").addEventListener("click", closeModal);
+    modal.addEventListener("click", function (event) {
+        if (event.target === modal) closeModal();
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") closeModal();
+    });
+
+    // Stop double clicks from sending the request twice
+    form.addEventListener("submit", function () {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Cancelling…";
+    });
+})();
+</script>
 {% endblock %}

@@ -2,6 +2,52 @@
 
 {% block title %}Browse Events – EventEase{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Filter panel (only used on the Events page) */
+    .event-filters {
+        position: relative; z-index: 5; margin: -2rem 0 1.5rem; padding: 1.1rem;
+        background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+    .ef-search { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .ef-search input { flex: 1; min-width: 0; }
+    .ef-selects { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; margin-top: .9rem; }
+    .ef-field label {
+        display: block; margin-bottom: .3rem; color: var(--muted); font-size: .7rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .07em;
+    }
+    .ef-foot {
+        display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap;
+        margin-top: .8rem; color: var(--muted); font-size: .78rem;
+    }
+
+    /* Result count and active filter tags */
+    .results-bar { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+    .results-count { color: var(--dark); font-weight: 600; margin-right: .3rem; }
+    .filter-tag {
+        padding: .2rem .75rem; border-radius: 999px; background: rgba(108, 71, 255, .1);
+        color: var(--primary); font-size: .78rem; font-weight: 600;
+    }
+
+    /* Event card details */
+    .event-card .card-meta { display: flex; gap: .45rem; line-height: 1.5; margin-bottom: .25rem; }
+    .event-card .price small { display: block; margin-bottom: -.2rem; }
+
+    @media (max-width: 992px) {
+        .ef-selects { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .event-filters { margin-top: -1.5rem; padding: .9rem; }
+        .ef-selects { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 420px) {
+        .ef-selects { grid-template-columns: 1fr; }
+        .ef-search .btn { flex: 1 1 100%; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <section class="page-header">
@@ -13,55 +59,101 @@
 
 <section class="container" style="padding-bottom: 4rem;">
 
-    <!-- ============ FILTER BAR ============ -->
-    <form method="get" action="{{ url_for('events') }}" class="filter-bar">
-        <input type="text" name="q" class="form-control" value="{{ q }}"
-               placeholder="Search by event, venue or city…" aria-label="Search events">
+    <!-- ============ FILTERS: Search | Category | Location | Price | Date | Sort ============ -->
+    <form method="get" action="{{ url_for('events') }}" class="event-filters">
 
-        <select name="category" class="form-control" data-autosubmit aria-label="Category">
-            <option value="">All Categories</option>
-            {% for cat in categories %}
-                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
-            {% endfor %}
-        </select>
+        <div class="ef-search">
+            <input type="text" name="q" class="form-control" value="{{ q }}"
+                   placeholder="Search by event, venue or city…" aria-label="Search events">
+            <button type="submit" class="btn btn-primary">🔍 Search</button>
+        </div>
 
-        <select name="sort" class="form-control" data-autosubmit aria-label="Sort by">
-            <option value="date" {% if sort == 'date' %}selected{% endif %}>Sort: Date (soonest)</option>
-            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Sort: Price (low to high)</option>
-            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Sort: Price (high to low)</option>
-        </select>
+        <div class="ef-selects">
+            <div class="ef-field">
+                <label for="f-category">Category</label>
+                <select id="f-category" name="category" class="form-control" data-autosubmit>
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <button type="submit" class="btn btn-primary">🔍 Search</button>
-        {% if q or selected_category %}
-            <a href="{{ url_for('events') }}" class="btn btn-outline">Clear</a>
-        {% endif %}
+            <div class="ef-field">
+                <label for="f-city">Location</label>
+                <select id="f-city" name="city" class="form-control" data-autosubmit>
+                    <option value="">All Locations</option>
+                    {% for loc in locations %}
+                        <option value="{{ loc }}" {% if loc == selected_city %}selected{% endif %}>{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ef-field">
+                <label for="f-price">Price</label>
+                <select id="f-price" name="price" class="form-control" data-autosubmit>
+                    <option value="">Any Price</option>
+                    {% for key, label in price_options %}
+                        <option value="{{ key }}" {% if key == selected_price %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ef-field">
+                <label for="f-when">Date</label>
+                <select id="f-when" name="when" class="form-control" data-autosubmit>
+                    <option value="">All Dates</option>
+                    {% for key, label in date_options %}
+                        <option value="{{ key }}" {% if key == selected_when %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ef-field">
+                <label for="f-sort">Sort by</label>
+                <select id="f-sort" name="sort" class="form-control" data-autosubmit>
+                    {% for key, label in sort_options %}
+                        <option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="ef-foot">
+            <span>This Week = next 7 days · This Month = next 30 days</span>
+            {% if active_filters %}
+                <a href="{{ url_for('events') }}" class="btn btn-outline btn-sm">✕ Reset all filters</a>
+            {% endif %}
+        </div>
     </form>
 
-    <!-- ============ CATEGORY CHIPS ============ -->
+    <!-- ============ CATEGORY CHIPS (keep the other chosen filters) ============ -->
     {% set icons = {'Concert': '🎵', 'Conference': '💼', 'Sports': '🏏', 'Comedy': '🎤', 'Festival': '🎪', 'Workshop': '🛠️', 'Theatre': '🎭'} %}
     <div class="category-list mb-2" style="margin-bottom: 2rem;">
-        <a href="{{ url_for('events') }}" class="category-chip {% if not selected_category %}active{% endif %}">
+        <a href="{{ url_for('events', **chip_args) }}" class="category-chip {% if not selected_category %}active{% endif %}">
             <span class="chip-icon">🎟️</span>All
         </a>
         {% for cat in categories %}
-            <a href="{{ url_for('events', category=cat) }}" class="category-chip {% if cat == selected_category %}active{% endif %}">
+            <a href="{{ url_for('events', category=cat, **chip_args) }}" class="category-chip {% if cat == selected_category %}active{% endif %}">
                 <span class="chip-icon">{{ icons.get(cat, '🎟️') }}</span>{{ cat }}
             </a>
         {% endfor %}
     </div>
 
-    <p class="muted mb-2">
-        {{ events|length }} event{{ '' if events|length == 1 else 's' }} found
-        {% if q %} for “{{ q }}”{% endif %}
-        {% if selected_category %} in {{ selected_category }}{% endif %}
-    </p>
+    <!-- ============ RESULT COUNT ============ -->
+    <div class="results-bar">
+        <span class="results-count">{{ events|length }} event{{ '' if events|length == 1 else 's' }} found</span>
+        {% for tag in active_filters %}
+            <span class="filter-tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
 
     <!-- ============ EVENT GRID ============ -->
     {% if events %}
         <div class="grid grid-3">
             {% for event in events %}
                 {% set left = event.total_seats - event.booked_count %}
-                <article class="event-card reveal">
+                <article class="event-card">
                     <a href="{{ url_for('event_detail', event_id=event.id) }}" class="card-img"
                        style="background-image: url('{{ event.image_url }}');">
                         <span class="card-badge">{{ event.category }}</span>
@@ -69,8 +161,10 @@
                     </a>
                     <div class="card-body">
                         <h3><a href="{{ url_for('event_detail', event_id=event.id) }}">{{ event.title }}</a></h3>
-                        <p class="card-meta">📍 {{ event.venue }}, {{ event.city }}</p>
-                        <p class="card-meta">🕒 {{ event.event_date|nice_date }} · {{ event.event_time|nice_time }}</p>
+                        <p class="card-meta"><span>📅</span><span>{{ event.event_date|nice_date }}</span></p>
+                        <p class="card-meta"><span>🕒</span><span>{{ event.event_time|nice_time }}</span></p>
+                        <p class="card-meta"><span>🏛️</span><span>{{ event.venue }}</span></p>
+                        <p class="card-meta"><span>📍</span><span>{{ event.city|place }}</span></p>
 
                         <div class="seats-bar">
                             <div class="seats-bar-fill" style="width: {{ (event.booked_count / event.total_seats * 100)|round|int }}%;"></div>
@@ -82,11 +176,11 @@
                         </p>
 
                         <div class="card-footer">
-                            <span class="price">{{ event.price|inr }} <small>onwards</small></span>
+                            <span class="price"><small>Starting from</small>{{ event.price|inr }}</span>
                             {% if left <= 0 %}
-                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-light btn-sm">Details</a>
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-light btn-sm">View Details</a>
                             {% else %}
-                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">Book Now</a>
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">View Details</a>
                             {% endif %}
                         </div>
                     </div>
@@ -97,7 +191,7 @@
         <div class="empty-state">
             <div class="empty-icon">🔍</div>
             <h3>No events found</h3>
-            <p>Try a different search word or choose another category.</p>
+            <p>Try changing your filters or search.</p>
             <a href="{{ url_for('events') }}" class="btn btn-primary">Show All Events</a>
         </div>
     {% endif %}
